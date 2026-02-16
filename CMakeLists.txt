@@ -18,6 +18,13 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 
 add_executable(sticky_note
         src/main.cpp
+        lib/main_window/main_window.cpp
+        include/shared.h
 )
 
 target_link_libraries(sticky_note PRIVATE Qt6::Widgets)
+
+target_include_directories(sticky_note PRIVATE
+        ${CMAKE_SOURCE_DIR}/include
+        ${CMAKE_SOURCE_DIR}/lib
+)
