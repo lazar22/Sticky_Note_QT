@@ -17,10 +17,10 @@ namespace sticky_note
         virtual ~IWindow() = default;
 
     public:
-        // virtual void set_title(std::string _title) = 0;
-        //
-        // virtual void show() = 0;
-        //
+        virtual void set_title(std::string _title) = 0;
+
+        virtual void show(bool is_note) = 0;
+
         // virtual void hide() = 0;
         //
         // virtual IWindow* clone() = 0;

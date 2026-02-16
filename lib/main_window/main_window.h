@@ -6,18 +6,21 @@
 #define MAIN_WINDOW_H
 
 #include <QWidget>
+#include <QAction>
 #include <QWindow>
-#include <QTextEdit>
 #include <QVBoxLayout>
+#include <QPushButton>
+#include <QSystemTrayIcon>
 
 #include "IWindow.h"
+#include "note_action/note_action.h"
 
 namespace sticky_note
 {
     class MainWindow : public QWidget, public IWindow
     {
         Q_OBJECT
-        QTextEdit* editor_ = nullptr;
+        QPushButton* create_btn = nullptr;
         QWindow* main_window_app = nullptr;
 
     public:
@@ -28,6 +31,9 @@ namespace sticky_note
         ~MainWindow() override = default;
 
     public:
+        void set_title(std::string _title) override;
+
+        void show(bool is_note) override;
     };
 }
 

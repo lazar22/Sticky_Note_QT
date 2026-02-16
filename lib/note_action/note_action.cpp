@@ -1,0 +1,25 @@
+//
+// Created by roki on 2026-02-16.
+//
+
+#include "note_action.h"
+
+#include <iostream>
+
+sticky_note::NoteAction::NoteAction(QObject* parent) : QObject(parent)
+{
+}
+
+void sticky_note::NoteAction::create_note(IWindow* window)
+{
+    std::cout << "Create Note" << std::endl;
+}
+
+void sticky_note::NoteAction::toggle_edit()
+{
+}
+
+void sticky_note::NoteAction::close_note()
+{
+    emit request_create_note();
+}

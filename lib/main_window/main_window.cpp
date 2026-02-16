@@ -4,26 +4,62 @@
 
 #include "main_window.h"
 
+#include "shared.h"
+
+static constexpr int WINDOW_MARGIN = 8;
+
 sticky_note::MainWindow::MainWindow(QWidget* parent)
     : QWidget(parent)
 {
-    editor_ = new QTextEdit(this);
+    auto* note_action = new NoteAction(this);
+    auto* create_action = new QAction("New", this);
+    const auto layout = new QVBoxLayout(this);
 
-    QVBoxLayout layout;
-    layout.setParent(parent);
+    create_btn = new QPushButton(this);
 
-    layout.setContentsMargins(8, 8, 8, 8);
-    layout.addWidget(editor_);
+    connect(create_btn, &QPushButton::clicked, create_action, &QAction::trigger);
+    create_action->setShortcut(QKeySequence::New);
 
-    setLayout(&layout);
+    layout->setContentsMargins(WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN);
+
+    layout->addStretch();
+    layout->addWidget(create_btn, 0, Qt::AlignCenter);
+    layout->addStretch();
+
+    setLayout(layout);
+    addAction(create_action);
 
     setStyleSheet("background: #fff6a8;");
-    editor_->setStyleSheet("background: transparent;");
+
+    connect(create_action, &QAction::triggered, this, [note_action, this]()
+    {
+        note_action->create_note(this);
+    });
 }
 
 void sticky_note::MainWindow::init(const int _w, const int _h, const std::string _title)
 {
+    set_title(_title);
+    setFixedSize(_w, _h);
+    show(false);
+
+    create_btn->setText("Create New Note");
+    create_btn->setFixedSize(width() - 2 * WINDOW_MARGIN, (height() * 0.05) * WINDOW_MARGIN);
+    create_btn->setCursor(Qt::PointingHandCursor);
+    create_btn->setStyleSheet("background: #fff6a8;");
+}
+
+void sticky_note::MainWindow::set_title(const std::string _title)
+{
     setWindowTitle(_title.c_str());
-    resize(_w, _h);
+}
+
+void sticky_note::MainWindow::show(const bool is_note)
+{
+    if (is_note)
+    {
+        setWindowFlags(Qt::FramelessWindowHint | Qt::Window | Qt::WindowStaysOnTopHint);
+    }
+
     showNormal();
 }

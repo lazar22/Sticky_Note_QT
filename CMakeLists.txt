@@ -6,6 +6,15 @@ project(Sticky_Note
         LANGUAGES CXX
 )
 
+file(READ "${CMAKE_SOURCE_DIR}/VERSION" APP_VERSION)
+string(STRIP "${APP_VERSION}" APP_VERSION)
+
+configure_file(
+        "${CMAKE_SOURCE_DIR}/version.h.in"
+        "${CMAKE_BINARY_DIR}/generated/version.h"
+        @ONLY
+)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -20,6 +29,8 @@ add_executable(sticky_note
         src/main.cpp
         lib/main_window/main_window.cpp
         include/shared.h
+        lib/note_action/note_action.cpp
+        lib/note_action/note_action.h
 )
 
 target_link_libraries(sticky_note PRIVATE Qt6::Widgets)
@@ -27,4 +38,5 @@ target_link_libraries(sticky_note PRIVATE Qt6::Widgets)
 target_include_directories(sticky_note PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/lib
+        ${CMAKE_BINARY_DIR}/generated
 )
