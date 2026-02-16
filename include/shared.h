@@ -13,7 +13,14 @@ namespace sticky_note
     {
         constexpr int WIDTH = 300;
         constexpr int HEIGHT = 300;
-        constexpr char* TITLE = "Main Window";
+        constexpr const char* TITLE = "Main Window";
+    }
+
+    namespace note_window
+    {
+        constexpr int WIDTH = 300;
+        constexpr int HEIGHT = 300;
+        constexpr const char* TITLE = "Default Note Title";
     }
 }
 

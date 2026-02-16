@@ -26,9 +26,9 @@ namespace sticky_note
         // virtual IWindow* clone() = 0;
         //
         // virtual void edit() = 0;
-        //
-        // virtual void close() = 0;
-        //
+
+        virtual void close() = 0;
+
         // virtual void change_color() = 0;
     };
 }

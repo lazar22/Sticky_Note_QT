@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.14)
 
 project(Sticky_Note
-        VERSION 0.0.1
         DESCRIPTION "Sticky note app for linux Ubuntu made using C++ and QT"
         LANGUAGES CXX
 )
@@ -28,9 +27,8 @@ find_package(Qt6 REQUIRED COMPONENTS Widgets)
 add_executable(sticky_note
         src/main.cpp
         lib/main_window/main_window.cpp
-        include/shared.h
         lib/note_action/note_action.cpp
-        lib/note_action/note_action.h
+        lib/note_window/note_window.cpp
 )
 
 target_link_libraries(sticky_note PRIVATE Qt6::Widgets)

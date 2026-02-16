@@ -5,6 +5,7 @@
 #include "main_window.h"
 
 #include "shared.h"
+#include "note_window/note_window.h"
 
 static constexpr int WINDOW_MARGIN = 8;
 
@@ -31,9 +32,11 @@ sticky_note::MainWindow::MainWindow(QWidget* parent)
 
     setStyleSheet("background: #fff6a8;");
 
-    connect(create_action, &QAction::triggered, this, [note_action, this]()
+    connect(create_action, &QAction::triggered, this, [this]()
     {
-        note_action->create_note(this);
+        auto* note_window = new NoteWindow();
+        auto* note_action = new NoteAction(note_window);
+        note_action->create_note(note_window);
     });
 }
 
@@ -60,6 +63,8 @@ void sticky_note::MainWindow::show(const bool is_note)
     {
         setWindowFlags(Qt::FramelessWindowHint | Qt::Window | Qt::WindowStaysOnTopHint);
     }
-
-    showNormal();
+    else
+    {
+        showNormal();
+    }
 }
