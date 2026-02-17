@@ -30,7 +30,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     top_layout = new QHBoxLayout();
 
     title_label = new QLabel(this);
-    note_label = new QLabel(this);
+    note_label = new QTextBrowser(this);
 
     title_edit = new QLineEdit(this);
     note_edit = new QTextEdit(this);
@@ -38,6 +38,14 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     edit_btn = new QPushButton(this);
     quit_btn = new QPushButton(this);
     color_btn = new QPushButton(this);
+
+    note_label->setFrameStyle(QFrame::NoFrame);
+    note_label->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    note_label->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    note_label->setReadOnly(true);
+    note_label->setAttribute(Qt::WA_TransparentForMouseEvents);
+    note_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    note_label->setMinimumHeight(0);
 
     edit_btn->setFixedSize(36, 36);
     quit_btn->setFixedSize(36, 36);
@@ -130,8 +138,6 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     title_edit->hide();
 
     note_label->setFont(note_fonts::REGULAR_FONT);
-    note_label->setWordWrap(true);
-    note_label->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     note_label->setStyleSheet("background: transparent; border: none;");
 
     note_edit->setFont(note_fonts::REGULAR_FONT);
@@ -153,8 +159,10 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     top_layout->addStretch();
 
     layout->addLayout(top_layout);
-    layout->addWidget(note_label, 1);
+    layout->addWidget(note_label);
     layout->addWidget(note_edit, 1);
+
+    layout->addStretch();
 
     setLayout(layout);
     addAction(quit_action);
@@ -188,7 +196,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
             title_edit->show();
 
             note_label->hide();
-            note_edit->setText(note_label->text());
+            note_edit->setText(note_label->toPlainText());
             note_edit->show();
 
             title_edit->setFocus();
@@ -233,7 +241,7 @@ void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string
     {
         set_title(_title);
     }
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->text()});
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText()});
 }
 
 void sticky_note::NoteWindow::set_title(const std::string _title)
@@ -258,6 +266,7 @@ void sticky_note::NoteWindow::close()
 void sticky_note::NoteWindow::edit(const std::string _note)
 {
     note_label->setText(QString::fromStdString(_note));
+    note_label->updateGeometry();
     note_edit->setText(QString::fromStdString(_note));
 }
 
@@ -265,6 +274,7 @@ void sticky_note::NoteWindow::save()
 {
     title_label->setText(title_edit->text());
     note_label->setText(note_edit->toPlainText());
+    note_label->updateGeometry();
 
     title_edit->hide();
     title_label->show();
@@ -273,14 +283,14 @@ void sticky_note::NoteWindow::save()
     note_label->show();
 
     setWindowTitle(title_label->text());
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->text()});
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText()});
 }
 
 void sticky_note::NoteWindow::change_color(const QColor& color)
 {
     current_color = color;
     setStyleSheet(QString("background-color: %1;").arg(current_color.name()));
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->text()});
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText()});
 }
 
 void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
@@ -336,7 +346,7 @@ void sticky_note::NoteWindow::mouseReleaseEvent(QMouseEvent* event)
     {
         is_dragging = false;
         setCursor(Qt::OpenHandCursor);
-        SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->text()});
+        SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText()});
         event->accept();
     }
 

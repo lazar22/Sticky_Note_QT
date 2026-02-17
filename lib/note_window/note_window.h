@@ -20,6 +20,8 @@
 #include <QColorDialog>
 #include <QUuid>
 
+#include <QTextBrowser>
+
 #include "IWindow.h"
 
 namespace sticky_note
@@ -41,7 +43,7 @@ namespace sticky_note
         QWidgetAction* drop_down = nullptr;
 
         QLabel* title_label = nullptr;
-        QLabel* note_label = nullptr;
+        QTextBrowser* note_label = nullptr;
 
         QLineEdit* title_edit = nullptr;
         QTextEdit* note_edit = nullptr;
