@@ -29,6 +29,9 @@ namespace sticky_note
         QHBoxLayout* top_layout = nullptr;
         QVBoxLayout* layout = nullptr;
 
+        bool is_dragging = false;
+        QPoint drag_offset;
+
     public:
         explicit NoteWindow(QWidget* parent = nullptr);
 
@@ -46,6 +49,11 @@ namespace sticky_note
         void enterEvent(QEnterEvent* event) override;
 
         void leaveEvent(QEvent* event) override;
+
+        void mouseMoveEvent(QMouseEvent* event) override;
+        void mousePressEvent(QMouseEvent* event) override;
+
+        void mouseReleaseEvent(QMouseEvent* event) override;
     };
 }
 

@@ -6,6 +6,7 @@
 #define SHARED_H
 
 #include <string>
+#include <QFont>
 
 namespace sticky_note
 {
@@ -21,6 +22,12 @@ namespace sticky_note
         constexpr int WIDTH = 300;
         constexpr int HEIGHT = 300;
         constexpr const char* TITLE = "Default Note Title";
+    }
+
+    namespace note_fonts
+    {
+        const QFont TITLE_FONT("Arial", 22, QFont::Bold);
+        const QFont REGULAR_FONT("Arial", 16, QFont::Bold);
     }
 }
 

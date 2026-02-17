@@ -33,9 +33,16 @@ namespace sticky_note
 
         // virtual void change_color() = 0;
 
+        // Mouse Events
         virtual void enterEvent(QEnterEvent* event) = 0;
 
         virtual void leaveEvent(QEvent* event) = 0;
+
+        virtual void mouseMoveEvent(QMouseEvent* event) = 0;
+
+        virtual void mousePressEvent(QMouseEvent* event) = 0;
+
+        virtual void mouseReleaseEvent(QMouseEvent* event) = 0;
     };
 }
 
