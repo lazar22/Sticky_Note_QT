@@ -48,10 +48,45 @@ jobs:
           git tag -a "${{ steps.ver.outputs.tag }}" -m "${{ steps.ver.outputs.tag }}"
           git push origin "${{ steps.ver.outputs.tag }}"
 
+      - name: Install Qt
+        if: steps.tagcheck.outputs.exists == 'false'
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.5.*'
+          host: 'linux'
+          target: 'desktop'
+          arch: 'gcc_64'
+
+      - name: Install dependencies
+        if: steps.tagcheck.outputs.exists == 'false'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libgl1-mesa-dev libfuse2
+
+      - name: Configure and build
+        if: steps.tagcheck.outputs.exists == 'false'
+        run: |
+          mkdir cmake-build-release
+          cmake -B cmake-build-release -DCMAKE_BUILD_TYPE=Release
+          cmake --build cmake-build-release --target sticky_note
+
+      - name: Generate AppImage
+        if: steps.tagcheck.outputs.exists == 'false'
+        run: |
+          chmod +x packaging/build_appimage.sh
+          ./packaging/build_appimage.sh
+
+      - name: Create Zip archive
+        if: steps.tagcheck.outputs.exists == 'false'
+        run: |
+          cd dist
+          zip Sticky_Note-x86_64.zip Sticky_Note-x86_64.AppImage
+
       - name: Create GitHub Release
         if: steps.tagcheck.outputs.exists == 'false'
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.ver.outputs.tag }}
           name: ${{ steps.ver.outputs.tag }}
+          artifacts: "dist/Sticky_Note-x86_64.AppImage,dist/Sticky_Note-x86_64.zip"
           generateReleaseNotes: true
