@@ -33,6 +33,8 @@ namespace sticky_note
         QAction* save_action = nullptr;
         QAction* color_action = nullptr;
 
+        QWidgetAction* drop_down = nullptr;
+
         QLabel* title_label = nullptr;
         QLabel* note_label = nullptr;
 
@@ -42,9 +44,13 @@ namespace sticky_note
         QPushButton* quit_btn = nullptr;
         QPushButton* edit_btn = nullptr;
         QPushButton* color_btn = nullptr;
+        QPushButton* color_pick_btn = nullptr;
 
         QHBoxLayout* top_layout = nullptr;
         QVBoxLayout* layout = nullptr;
+        QGridLayout* grid_layout = nullptr;
+
+        QWidget* container = nullptr;
 
         bool is_dragging = false;
         QPoint drag_offset;

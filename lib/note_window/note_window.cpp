@@ -60,8 +60,10 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     connect(color_btn, &QPushButton::clicked, this, [this]()
     {
         QMenu menu(this);
-        QWidget* container = new QWidget(&menu);
-        QGridLayout* grid_layout = new QGridLayout(container);
+
+        container = new QWidget(&menu);
+        grid_layout = new QGridLayout(container);
+
         grid_layout->setSpacing(2);
         grid_layout->setContentsMargins(5, 5, 5, 5);
 
@@ -74,7 +76,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
         for (int i = 0; i < colors.size(); ++i)
         {
-            QPushButton* color_pick_btn = new QPushButton();
+            color_pick_btn = new QPushButton();
             color_pick_btn->setFixedSize(25, 25);
             color_pick_btn->setStyleSheet(
                 QString("background-color: %1; border: 1px solid gray;").arg(colors[i].name()));
@@ -86,9 +88,9 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
             grid_layout->addWidget(color_pick_btn, i / 4, i % 4);
         }
 
-        QWidgetAction* action = new QWidgetAction(&menu);
-        action->setDefaultWidget(container);
-        menu.addAction(action);
+        drop_down = new QWidgetAction(&menu);
+        drop_down->setDefaultWidget(container);
+        menu.addAction(drop_down);
 
         menu.addSeparator();
         QAction* more_colors_action = menu.addAction("More colors...");
@@ -200,9 +202,9 @@ void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string
     QScreen* screen = QGuiApplication::primaryScreen();
     if (screen)
     {
-        QRect screenGeometry = screen->geometry();
-        int width = screenGeometry.width() * 0.15; // 15% of screen width
-        int height = screenGeometry.height() * 0.25; // 25% of screen height
+        const QRect screenGeometry = screen->geometry();
+        const int width = screenGeometry.width() * 0.15; // 15% of screen width
+        const int height = screenGeometry.height() * 0.25; // 25% of screen height
         resize(width, height);
     }
     else
