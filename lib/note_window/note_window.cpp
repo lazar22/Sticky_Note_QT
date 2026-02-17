@@ -21,6 +21,8 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     title_label = new QLabel(this);
     quit_btn = new QPushButton("Quit", this);
 
+    quit_btn->setCursor(Qt::PointingHandCursor);
+
     connect(quit_btn, &QPushButton::clicked, quit_action, &QAction::trigger);
     quit_action->setShortcut(QKeySequence::Close);
 
@@ -88,7 +90,7 @@ void sticky_note::NoteWindow::leaveEvent(QEvent* event)
 {
     qDebug() << "NoteWindow leave event";
     quit_btn->setEnabled(false);
-    setCursor(Qt::PointingHandCursor);
+    unsetCursor();
     QWidget::leaveEvent(event);
 }
 
@@ -111,6 +113,7 @@ void sticky_note::NoteWindow::mousePressEvent(QMouseEvent* event)
         if (child && (qobject_cast<QAbstractButton*>(child) != nullptr))
         {
             QWidget::mousePressEvent(event);
+            return;
         }
 
         is_dragging = true;
