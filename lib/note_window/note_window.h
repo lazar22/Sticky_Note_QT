@@ -18,6 +18,7 @@
 #include <QWidgetAction>
 #include <QGridLayout>
 #include <QColorDialog>
+#include <QUuid>
 
 #include "IWindow.h"
 
@@ -26,6 +27,10 @@ namespace sticky_note
     class NoteWindow : public QWidget, public IWindow
     {
         Q_OBJECT
+
+        QUuid id;
+        QString note_text;
+        QColor current_color;
 
         QAction* quit_action = nullptr;
         QAction* edit_action = nullptr;
@@ -57,9 +62,10 @@ namespace sticky_note
 
     public:
         explicit NoteWindow(QWidget* parent = nullptr);
+        explicit NoteWindow(QUuid _id, QPoint _pos, QColor _color, QString _title, QString _text,
+                            QWidget* parent = nullptr);
 
         void init(int _w, int _h, std::string _title) override;
-
         ~NoteWindow() override = default;
 
     public:

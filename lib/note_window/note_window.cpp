@@ -8,13 +8,17 @@
 #include <QDebug> // Testing
 
 #include "shared.h"
+#include "save_handler/save_handler.h"
 #include <QScreen>
 #include <QGuiApplication>
+#include <QDir>
+#include <QFileInfo>
+#include <QStandardPaths>
 
 static constexpr int WINDOW_MARGIN = 8;
 
 sticky_note::NoteWindow::NoteWindow(QWidget* parent)
-    : QWidget(parent)
+    : QWidget(parent), id(QUuid::createUuid()), current_color("#fff6a8")
 {
     quit_action = new QAction("Quit", this);
     edit_action = new QAction("Edit", this);
@@ -159,11 +163,12 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     addAction(save_action);
     addAction(color_action);
 
-    setStyleSheet("background: #fff6a8;");
+    setStyleSheet("background: " + current_color.name() + ";");
     setAttribute(Qt::WA_DeleteOnClose);
 
     connect(quit_action, &QAction::triggered, this, [this]()
     {
+        SaveHandler::delete_json(id);
         close();
     });
 
@@ -197,6 +202,18 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     setMouseTracking(true);
 }
 
+sticky_note::NoteWindow::NoteWindow(QUuid _id, QPoint _pos, QColor _color, QString _title, QString _text,
+                                    QWidget* parent)
+    : NoteWindow(parent)
+{
+    id = _id;
+    current_color = _color;
+    move(_pos);
+    set_title(_title.toStdString());
+    edit(_text.toStdString());
+    setStyleSheet("background: " + current_color.name() + ";");
+}
+
 void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string _title)
 {
     QScreen* screen = QGuiApplication::primaryScreen();
@@ -211,7 +228,12 @@ void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string
     {
         resize(_w, _h);
     }
-    set_title(_title);
+
+    if (title_label->text().isEmpty() || title_label->text() == sticky_note::note_window::TITLE)
+    {
+        set_title(_title);
+    }
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->text()});
 }
 
 void sticky_note::NoteWindow::set_title(const std::string _title)
@@ -254,16 +276,18 @@ void sticky_note::NoteWindow::save()
     note_label->show();
 
     setWindowTitle(title_label->text());
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->text()});
 }
 
 void sticky_note::NoteWindow::change_color(const QColor& color)
 {
-    setStyleSheet(QString("background-color: %1;").arg(color.name()));
+    current_color = color;
+    setStyleSheet(QString("background-color: %1;").arg(current_color.name()));
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->text()});
 }
 
 void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
 {
-    qDebug() << "NoteWindow enter event";
     quit_btn->setEnabled(true);
     edit_btn->setEnabled(true);
     color_btn->setEnabled(true);
@@ -273,7 +297,6 @@ void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
 
 void sticky_note::NoteWindow::leaveEvent(QEvent* event)
 {
-    qDebug() << "NoteWindow leave event";
     quit_btn->setEnabled(false);
     edit_btn->setEnabled(false);
     color_btn->setEnabled(false);
@@ -316,6 +339,7 @@ void sticky_note::NoteWindow::mouseReleaseEvent(QMouseEvent* event)
     {
         is_dragging = false;
         setCursor(Qt::OpenHandCursor);
+        SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->text()});
         event->accept();
     }
 

@@ -6,10 +6,13 @@
 
 #include "shared.h"
 #include "note_window/note_window.h"
+#include "save_handler/save_handler.h"
 
 #include <QTimer>
 #include <QMenu>
 #include <QApplication>
+#include <QDir>
+#include <QUuid>
 
 static constexpr int WINDOW_MARGIN = 8;
 
@@ -87,6 +90,8 @@ sticky_note::MainWindow::MainWindow(QWidget* parent)
         auto* note_action = new NoteAction(note_window);
         note_action->create_note(note_window);
     });
+
+    load_notes();
 }
 
 void sticky_note::MainWindow::init(const int _w, const int _h, const std::string _title)
@@ -137,4 +142,15 @@ void sticky_note::MainWindow::restoreFromTray()
     setWindowState((windowState() & ~Qt::WindowMinimized) | (Qt::WindowActive));
     raise();
     activateWindow();
+}
+
+void sticky_note::MainWindow::load_notes()
+{
+    const QVector<NoteData> notes = SaveHandler::load_notes();
+    for (const auto& data : notes)
+    {
+        auto* note_window = new NoteWindow(data.id, data.pos, data.color, data.title, data.text);
+        auto* note_action = new NoteAction(note_window);
+        note_action->create_note(note_window);
+    }
 }

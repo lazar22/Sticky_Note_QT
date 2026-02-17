@@ -18,7 +18,6 @@ void sticky_note::NoteAction::create_note(IWindow* window)
 
 void sticky_note::NoteAction::toggle_edit()
 {
-    qDebug() << "Toggle Edit";
 }
 
 void sticky_note::NoteAction::close_note()

@@ -71,6 +71,7 @@ namespace sticky_note
 
     private slots:
         void restoreFromTray();
+        void load_notes();
     };
 }
 

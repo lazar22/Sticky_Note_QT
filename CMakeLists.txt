@@ -29,6 +29,7 @@ add_executable(sticky_note
         lib/main_window/main_window.cpp
         lib/note_action/note_action.cpp
         lib/note_window/note_window.cpp
+        lib/save_handler/save_handler.cpp
         sticky_note.desktop
 )
 
