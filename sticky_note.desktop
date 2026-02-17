@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=Sticky Note
+Exec=./sticky_note
+Icon=./icons/note_icon.png
+Terminal=false
+Categories=Utility;

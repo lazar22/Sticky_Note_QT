@@ -19,13 +19,17 @@ sticky_note::MainWindow::MainWindow(QWidget* parent)
     auto* create_action = new QAction("New", this);
     const auto layout = new QVBoxLayout(this);
 
-    tray_icon = new QSystemTrayIcon(QIcon("icons/note_icon.png"), this);
+    const QIcon app_icon = QIcon("icons/note_icon.png");
+
+    QApplication::setWindowIcon(app_icon);
+    setWindowIcon(app_icon);
+
+    tray_icon = new QSystemTrayIcon(app_icon, this);
     auto* tray_menu = new QMenu(this);
 
     auto* restore_action = new QAction("Restore", this);
     auto* quit_action = new QAction("Quit", this);
 
-    tray_menu->setIcon(QIcon("icons/note_icon.png"));
     tray_menu->addAction(create_action);
     tray_menu->addSeparator();
     tray_menu->addAction(restore_action);

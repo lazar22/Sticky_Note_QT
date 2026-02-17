@@ -29,6 +29,7 @@ add_executable(sticky_note
         lib/main_window/main_window.cpp
         lib/note_action/note_action.cpp
         lib/note_window/note_window.cpp
+        sticky_note.desktop
 )
 
 add_custom_command(TARGET sticky_note POST_BUILD
@@ -36,6 +37,13 @@ add_custom_command(TARGET sticky_note POST_BUILD
         "${CMAKE_SOURCE_DIR}/icons"
         "$<TARGET_FILE_DIR:sticky_note>/icons"
         COMMENT "Copying icons folder to the build directory"
+)
+
+add_custom_command(TARGET sticky_note POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy
+        "${CMAKE_SOURCE_DIR}/sticky_note.desktop"
+        "$<TARGET_FILE_DIR:sticky_note>/sticky_note.desktop"
+        COMMENT "Copying .desktop file to the build directory"
 )
 
 target_link_libraries(sticky_note PRIVATE Qt6::Widgets)
