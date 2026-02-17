@@ -14,6 +14,10 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include <QMenu>
+#include <QWidgetAction>
+#include <QGridLayout>
+#include <QColorDialog>
 
 #include "IWindow.h"
 
@@ -27,6 +31,7 @@ namespace sticky_note
         QAction* edit_action = nullptr;
         QAction* create_action = nullptr;
         QAction* save_action = nullptr;
+        QAction* color_action = nullptr;
 
         QLabel* title_label = nullptr;
         QLabel* note_label = nullptr;
@@ -36,6 +41,7 @@ namespace sticky_note
 
         QPushButton* quit_btn = nullptr;
         QPushButton* edit_btn = nullptr;
+        QPushButton* color_btn = nullptr;
 
         QHBoxLayout* top_layout = nullptr;
         QVBoxLayout* layout = nullptr;
@@ -60,6 +66,8 @@ namespace sticky_note
         void save();
 
         void close() override;
+
+        void change_color(const QColor& color);
 
         void enterEvent(QEnterEvent* event) override;
 

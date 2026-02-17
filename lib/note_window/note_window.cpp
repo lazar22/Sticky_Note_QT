@@ -20,6 +20,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     edit_action = new QAction("Edit", this);
     create_action = new QAction("New", this);
     save_action = new QAction("Save", this);
+    color_action = new QAction("Change Color", this);
 
     layout = new QVBoxLayout(this);
     top_layout = new QHBoxLayout();
@@ -32,24 +33,81 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     edit_btn = new QPushButton(this);
     quit_btn = new QPushButton(this);
+    color_btn = new QPushButton(this);
 
     edit_btn->setFixedSize(36, 36);
     quit_btn->setFixedSize(36, 36);
+    color_btn->setFixedSize(36, 36);
 
     edit_btn->setIcon(QIcon("icons/pen.png"));
     quit_btn->setIcon(QIcon("icons/exit.png"));
+    color_btn->setIcon(QIcon("icons/wheel.png"));
 
     edit_btn->setFlat(true);
     quit_btn->setFlat(true);
+    color_btn->setFlat(true);
 
     edit_btn->setCursor(Qt::PointingHandCursor);
     quit_btn->setCursor(Qt::PointingHandCursor);
+    color_btn->setCursor(Qt::PointingHandCursor);
 
     connect(quit_btn, &QPushButton::clicked, quit_action, &QAction::trigger);
     quit_action->setShortcut(QKeySequence::Close); // Ctrl + W
 
     connect(edit_btn, &QPushButton::clicked, edit_action, &QAction::trigger);
     edit_action->setShortcut(QKeySequence("Ctrl+E"));
+
+    connect(color_btn, &QPushButton::clicked, this, [this]()
+    {
+        QMenu menu(this);
+        QWidget* container = new QWidget(&menu);
+        QGridLayout* grid_layout = new QGridLayout(container);
+        grid_layout->setSpacing(2);
+        grid_layout->setContentsMargins(5, 5, 5, 5);
+
+        const QVector<QColor> colors = {
+            "#ffadad", "#ffd6a5", "#fdffb6", "#caffbf",
+            "#9bf6ff", "#a0c4ff", "#bdb2ff", "#ffc6ff",
+            "#fffffc", "#f0f0f0", "#d9d9d9", "#bfbfbf",
+            "#ff7eb9", "#7afcff", "#feff9c", "#ff9bbb"
+        };
+
+        for (int i = 0; i < colors.size(); ++i)
+        {
+            QPushButton* color_pick_btn = new QPushButton();
+            color_pick_btn->setFixedSize(25, 25);
+            color_pick_btn->setStyleSheet(
+                QString("background-color: %1; border: 1px solid gray;").arg(colors[i].name()));
+            connect(color_pick_btn, &QPushButton::clicked, this, [this, color = colors[i], &menu]()
+            {
+                change_color(color);
+                menu.close();
+            });
+            grid_layout->addWidget(color_pick_btn, i / 4, i % 4);
+        }
+
+        QWidgetAction* action = new QWidgetAction(&menu);
+        action->setDefaultWidget(container);
+        menu.addAction(action);
+
+        menu.addSeparator();
+        QAction* more_colors_action = menu.addAction("More colors...");
+        connect(more_colors_action, &QAction::triggered, this, [this]()
+        {
+            QColor color = QColorDialog::getColor(palette().window().color(), this, "Select Color");
+            if (color.isValid())
+            {
+                change_color(color);
+            }
+        });
+
+        menu.exec(color_btn->mapToGlobal(QPoint(0, color_btn->height())));
+    });
+    connect(color_action, &QAction::triggered, this, [this]()
+    {
+        color_btn->click();
+    });
+    color_action->setShortcut(QKeySequence("Ctrl+C"));
 
     connect(save_action, &QAction::triggered, this, &NoteWindow::save);
     save_action->setShortcut(QKeySequence("Ctrl+S"));
@@ -76,6 +134,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     quit_btn->setEnabled(false);
     edit_btn->setEnabled(false);
+    color_btn->setEnabled(false);
 
     layout->setContentsMargins(WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN);
 
@@ -83,6 +142,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     top_layout->addWidget(title_label, 1);
     top_layout->addWidget(title_edit, 1);
     top_layout->addWidget(edit_btn, 0);
+    top_layout->addWidget(color_btn, 0);
     top_layout->addWidget(quit_btn, 0);
     top_layout->addStretch();
 
@@ -95,6 +155,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     addAction(edit_action);
     addAction(create_action);
     addAction(save_action);
+    addAction(color_action);
 
     setStyleSheet("background: #fff6a8;");
     setAttribute(Qt::WA_DeleteOnClose);
@@ -193,11 +254,17 @@ void sticky_note::NoteWindow::save()
     setWindowTitle(title_label->text());
 }
 
+void sticky_note::NoteWindow::change_color(const QColor& color)
+{
+    setStyleSheet(QString("background-color: %1;").arg(color.name()));
+}
+
 void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
 {
     qDebug() << "NoteWindow enter event";
     quit_btn->setEnabled(true);
     edit_btn->setEnabled(true);
+    color_btn->setEnabled(true);
     setCursor(Qt::OpenHandCursor);
     QWidget::enterEvent(event);
 }
@@ -207,6 +274,7 @@ void sticky_note::NoteWindow::leaveEvent(QEvent* event)
     qDebug() << "NoteWindow leave event";
     quit_btn->setEnabled(false);
     edit_btn->setEnabled(false);
+    color_btn->setEnabled(false);
     unsetCursor();
     QWidget::leaveEvent(event);
 }
