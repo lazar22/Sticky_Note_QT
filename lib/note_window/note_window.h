@@ -42,6 +42,10 @@ namespace sticky_note
         void show(bool is_note) override;
 
         void close() override;
+
+        void enterEvent(QEnterEvent* event) override;
+
+        void leaveEvent(QEvent* event) override;
     };
 }
 

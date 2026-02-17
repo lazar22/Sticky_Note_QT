@@ -6,6 +6,8 @@
 #define IWINDOW_H
 
 #include <string>
+#include <QEvent>
+#include <QEnterEvent>
 
 namespace sticky_note
 {
@@ -30,6 +32,10 @@ namespace sticky_note
         virtual void close() = 0;
 
         // virtual void change_color() = 0;
+
+        virtual void enterEvent(QEnterEvent* event) = 0;
+
+        virtual void leaveEvent(QEvent* event) = 0;
     };
 }
 

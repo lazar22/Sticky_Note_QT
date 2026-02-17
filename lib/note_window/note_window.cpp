@@ -5,6 +5,8 @@
 #include "note_window.h"
 #include "note_action/note_action.h"
 
+#include <QDebug> // Testing
+
 static constexpr int WINDOW_MARGIN = 8;
 
 sticky_note::NoteWindow::NoteWindow(QWidget* parent)
@@ -38,6 +40,8 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     {
         close();
     });
+
+    setMouseTracking(true);
 }
 
 void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string _title)
@@ -64,4 +68,16 @@ void sticky_note::NoteWindow::show(const bool is_note)
 void sticky_note::NoteWindow::close()
 {
     QWidget::close();
+}
+
+void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
+{
+    qDebug() << "NoteWindow enter event";
+    QWidget::enterEvent(event);
+}
+
+void sticky_note::NoteWindow::leaveEvent(QEvent* event)
+{
+    qDebug() << "NoteWindow leave event";
+    QWidget::leaveEvent(event);
 }

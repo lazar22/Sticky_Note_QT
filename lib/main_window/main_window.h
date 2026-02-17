@@ -38,6 +38,14 @@ namespace sticky_note
         void close() override
         {
         };
+
+        void enterEvent(QEnterEvent* event) override
+        {
+        }
+
+        void leaveEvent(QEvent* event) override
+        {
+        }
     };
 }
 
