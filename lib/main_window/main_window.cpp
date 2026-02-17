@@ -28,10 +28,12 @@ sticky_note::MainWindow::MainWindow(QWidget* parent)
     auto* tray_menu = new QMenu(this);
 
     auto* restore_action = new QAction("Restore", this);
+    auto* close_all_action = new QAction("Close All Notes", this);
     auto* quit_action = new QAction("Quit", this);
 
     tray_menu->addAction(create_action);
     tray_menu->addSeparator();
+    tray_menu->addAction(close_all_action);
     tray_menu->addAction(restore_action);
     tray_menu->addAction(quit_action);
 
@@ -54,6 +56,16 @@ sticky_note::MainWindow::MainWindow(QWidget* parent)
     create_action->setShortcut(QKeySequence::New);
 
     connect(restore_action, &QAction::triggered, this, &MainWindow::restoreFromTray);
+    connect(close_all_action, &QAction::triggered, this, [this]()
+    {
+        for (auto* widget : QApplication::topLevelWidgets())
+        {
+            if (widget->inherits("sticky_note::NoteWindow"))
+            {
+                widget->close();
+            }
+        }
+    });
     connect(quit_action, &QAction::triggered, qApp, &QCoreApplication::quit);
 
     tray_icon->show();
