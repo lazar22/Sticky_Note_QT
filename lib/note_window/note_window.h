@@ -22,9 +22,13 @@ namespace sticky_note
         Q_OBJECT
 
         QAction* quit_action = nullptr;
+        QAction* edit_action = nullptr;
+        QAction* create_action = nullptr;
 
         QLabel* title_label = nullptr;
+
         QPushButton* quit_btn = nullptr;
+        QPushButton* edit_btn = nullptr;
 
         QHBoxLayout* top_layout = nullptr;
         QVBoxLayout* layout = nullptr;

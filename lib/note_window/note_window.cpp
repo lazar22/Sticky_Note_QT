@@ -15,30 +15,54 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     : QWidget(parent)
 {
     quit_action = new QAction("Quit", this);
+    edit_action = new QAction("Edit", this);
+    create_action = new QAction("New", this);
+
     layout = new QVBoxLayout(this);
     top_layout = new QHBoxLayout();
 
     title_label = new QLabel(this);
-    quit_btn = new QPushButton("Quit", this);
 
+    edit_btn = new QPushButton(this);
+    quit_btn = new QPushButton(this);
+
+    edit_btn->setFixedSize(36, 36);
+    quit_btn->setFixedSize(36, 36);
+
+    edit_btn->setIcon(QIcon(":/icons/pen.png"));
+    quit_btn->setIcon(QIcon(":/icons/exit.png"));
+
+    edit_btn->setFlat(true);
+    quit_btn->setFlat(true);
+
+    edit_btn->setCursor(Qt::PointingHandCursor);
     quit_btn->setCursor(Qt::PointingHandCursor);
 
     connect(quit_btn, &QPushButton::clicked, quit_action, &QAction::trigger);
-    quit_action->setShortcut(QKeySequence::Close);
+    quit_action->setShortcut(QKeySequence::Close); // Ctrl + W
+
+    connect(edit_btn, &QPushButton::clicked, edit_action, &QAction::trigger);
+    edit_action->setShortcut(QKeySequence("Ctrl+E"));
+
+    create_action->setShortcut(QKeySequence::New); // Ctrl + N
 
     title_label->setFont(note_fonts::TITLE_FONT);
     quit_btn->setEnabled(false);
+    edit_btn->setEnabled(false);
 
     layout->setContentsMargins(WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN);
 
     top_layout->addStretch();
     top_layout->addWidget(title_label, 4, Qt::AlignCenter);
+    top_layout->addWidget(edit_btn, 0, Qt::AlignCenter);
     top_layout->addWidget(quit_btn, 0, Qt::AlignCenter);
     top_layout->addStretch();
 
     layout->addLayout(top_layout);
     setLayout(layout);
     addAction(quit_action);
+    addAction(edit_action);
+    addAction(create_action);
 
     setStyleSheet("background: #fff6a8;");
     setAttribute(Qt::WA_DeleteOnClose);
@@ -46,6 +70,19 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     connect(quit_action, &QAction::triggered, this, [this]()
     {
         close();
+    });
+
+    connect(create_action, &QAction::triggered, this, [this]()
+    {
+        auto* note_window = new NoteWindow();
+        auto* note_action = new NoteAction(note_window);
+        note_action->create_note(note_window);
+    });
+
+    connect(edit_action, &QAction::triggered, this, [this]()
+    {
+        auto* note_action = new NoteAction(this);
+        note_action->toggle_edit();
     });
 
     setMouseTracking(true);
@@ -82,6 +119,7 @@ void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
 {
     qDebug() << "NoteWindow enter event";
     quit_btn->setEnabled(true);
+    edit_btn->setEnabled(true);
     setCursor(Qt::OpenHandCursor);
     QWidget::enterEvent(event);
 }
@@ -90,6 +128,7 @@ void sticky_note::NoteWindow::leaveEvent(QEvent* event)
 {
     qDebug() << "NoteWindow leave event";
     quit_btn->setEnabled(false);
+    edit_btn->setEnabled(false);
     unsetCursor();
     QWidget::leaveEvent(event);
 }
