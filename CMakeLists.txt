@@ -31,6 +31,7 @@ add_executable(sticky_note
         lib/note_window/note_window.cpp
         lib/save_handler/save_handler.cpp
         sticky_note.desktop
+        resources.qrc
 )
 
 add_custom_command(TARGET sticky_note POST_BUILD
@@ -53,4 +54,12 @@ target_include_directories(sticky_note PRIVATE
         ${CMAKE_SOURCE_DIR}/include
         ${CMAKE_SOURCE_DIR}/lib
         ${CMAKE_BINARY_DIR}/generated
+)
+
+# AppImage generation target
+add_custom_target(appimage
+        COMMAND bash "${CMAKE_SOURCE_DIR}/packaging/build_appimage.sh"
+        DEPENDS sticky_note
+        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+        COMMENT "Generating AppImage..."
 )

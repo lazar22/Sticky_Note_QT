@@ -43,9 +43,9 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     quit_btn->setFixedSize(36, 36);
     color_btn->setFixedSize(36, 36);
 
-    edit_btn->setIcon(QIcon("icons/pen.png"));
-    quit_btn->setIcon(QIcon("icons/exit.png"));
-    color_btn->setIcon(QIcon("icons/wheel.png"));
+    edit_btn->setIcon(QIcon(":/icons/pen.png"));
+    quit_btn->setIcon(QIcon(":/icons/exit.png"));
+    color_btn->setIcon(QIcon(":/icons/wheel.png"));
 
     edit_btn->setFlat(true);
     quit_btn->setFlat(true);

@@ -22,7 +22,7 @@ sticky_note::MainWindow::MainWindow(QWidget* parent)
     auto* create_action = new QAction("New", this);
     const auto layout = new QVBoxLayout(this);
 
-    const QIcon app_icon = QIcon("icons/note_icon.png");
+    const QIcon app_icon = QIcon(":/icons/note_icon.png");
 
     QApplication::setWindowIcon(app_icon);
     setWindowIcon(app_icon);
