@@ -7,19 +7,52 @@
 #include "shared.h"
 #include "note_window/note_window.h"
 
+#include <QTimer>
+#include <QMenu>
+#include <QApplication>
+
 static constexpr int WINDOW_MARGIN = 8;
 
 sticky_note::MainWindow::MainWindow(QWidget* parent)
     : QWidget(parent)
 {
-    auto* note_action = new NoteAction(this);
     auto* create_action = new QAction("New", this);
     const auto layout = new QVBoxLayout(this);
+
+    tray_icon = new QSystemTrayIcon(QIcon("icons/note_icon.png"), this);
+    auto* tray_menu = new QMenu(this);
+
+    auto* restore_action = new QAction("Restore", this);
+    auto* quit_action = new QAction("Quit", this);
+
+    tray_menu->setIcon(QIcon("icons/note_icon.png"));
+    tray_menu->addAction(create_action);
+    tray_menu->addSeparator();
+    tray_menu->addAction(restore_action);
+    tray_menu->addAction(quit_action);
+
+    tray_icon->setContextMenu(tray_menu);
+    tray_icon->setToolTip("Sticky Note");
+
+    // Click the tray icon to restore
+    connect(tray_icon, &QSystemTrayIcon::activated, this,
+            [this](QSystemTrayIcon::ActivationReason reason)
+            {
+                if (reason == QSystemTrayIcon::Trigger || reason == QSystemTrayIcon::DoubleClick)
+                {
+                    restoreFromTray();
+                }
+            });
 
     create_btn = new QPushButton(this);
 
     connect(create_btn, &QPushButton::clicked, create_action, &QAction::trigger);
     create_action->setShortcut(QKeySequence::New);
+
+    connect(restore_action, &QAction::triggered, this, &MainWindow::restoreFromTray);
+    connect(quit_action, &QAction::triggered, qApp, &QCoreApplication::quit);
+
+    tray_icon->show();
 
     layout->setContentsMargins(WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN);
 
@@ -67,4 +100,25 @@ void sticky_note::MainWindow::show(const bool is_note)
     {
         showNormal();
     }
+}
+
+void sticky_note::MainWindow::changeEvent(QEvent* event)
+{
+    if (event->type() == QEvent::WindowStateChange)
+    {
+        if (isMaximized())
+        {
+            QTimer::singleShot(0, this, &QWidget::hide);
+        }
+    }
+
+    QWidget::changeEvent(event);
+}
+
+void sticky_note::MainWindow::restoreFromTray()
+{
+    show(false);
+    setWindowState((windowState() & ~Qt::WindowMinimized) | (Qt::WindowActive));
+    raise();
+    activateWindow();
 }

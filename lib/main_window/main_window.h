@@ -20,8 +20,11 @@ namespace sticky_note
     class MainWindow : public QWidget, public IWindow
     {
         Q_OBJECT
+
         QPushButton* create_btn = nullptr;
         QWindow* main_window_app = nullptr;
+
+        QSystemTrayIcon* tray_icon = nullptr;
 
     public:
         explicit MainWindow(QWidget* parent = nullptr);
@@ -58,6 +61,12 @@ namespace sticky_note
         void mouseReleaseEvent(QMouseEvent* event) override
         {
         }
+
+    protected:
+        void changeEvent(QEvent* event) override;
+
+    private slots:
+        void restoreFromTray();
     };
 }
 
