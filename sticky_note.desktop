@@ -1,7 +1,8 @@
 [Desktop Entry]
 Type=Application
 Name=Sticky Note
-Exec=./sticky_note
+Exec=./sticky_note --minimized
 Icon=./icons/note_icon.png
 Terminal=false
 Categories=Utility;
+X-GNOME-Autostart-enabled=true

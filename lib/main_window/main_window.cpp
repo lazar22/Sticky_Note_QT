@@ -119,6 +119,7 @@ void sticky_note::MainWindow::show(const bool is_note)
     }
     else
     {
+        setWindowFlags(windowFlags() & ~Qt::Tool);
         showNormal();
     }
 }
@@ -127,9 +128,10 @@ void sticky_note::MainWindow::changeEvent(QEvent* event)
 {
     if (event->type() == QEvent::WindowStateChange)
     {
-        if (isMaximized())
+        if (isMinimized())
         {
-            QTimer::singleShot(0, this, &QWidget::hide);
+            setWindowFlags(windowFlags() | Qt::Tool);
+            hide();
         }
     }
 

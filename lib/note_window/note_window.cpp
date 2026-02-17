@@ -245,11 +245,7 @@ void sticky_note::NoteWindow::set_title(const std::string _title)
 
 void sticky_note::NoteWindow::show(const bool is_note)
 {
-    if (is_note)
-    {
-        setWindowFlags(Qt::FramelessWindowHint | Qt::Window | Qt::WindowStaysOnTopHint);
-    }
-
+    setWindowFlags(Qt::FramelessWindowHint | Qt::Window | Qt::WindowStaysOnTopHint | Qt::Tool);
     QWidget::show();
 }
 
