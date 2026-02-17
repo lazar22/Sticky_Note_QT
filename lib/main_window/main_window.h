@@ -38,6 +38,10 @@ namespace sticky_note
 
         void show(bool is_note) override;
 
+        void edit(std::string _note) override
+        {
+        }
+
         void close() override
         {
         };

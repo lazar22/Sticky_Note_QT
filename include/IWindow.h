@@ -26,8 +26,8 @@ namespace sticky_note
         // virtual void hide() = 0;
         //
         // virtual IWindow* clone() = 0;
-        //
-        // virtual void edit() = 0;
+
+        virtual void edit(std::string _note) = 0;
 
         virtual void close() = 0;
 

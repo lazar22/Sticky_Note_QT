@@ -9,6 +9,8 @@
 #include <QAction>
 #include <QWindow>
 #include <QLabel>
+#include <QLineEdit>
+#include <QTextEdit>
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
@@ -24,8 +26,13 @@ namespace sticky_note
         QAction* quit_action = nullptr;
         QAction* edit_action = nullptr;
         QAction* create_action = nullptr;
+        QAction* save_action = nullptr;
 
         QLabel* title_label = nullptr;
+        QLabel* note_label = nullptr;
+
+        QLineEdit* title_edit = nullptr;
+        QTextEdit* note_edit = nullptr;
 
         QPushButton* quit_btn = nullptr;
         QPushButton* edit_btn = nullptr;
@@ -48,6 +55,10 @@ namespace sticky_note
 
         void show(bool is_note) override;
 
+        void edit(std::string _note) override;
+
+        void save();
+
         void close() override;
 
         void enterEvent(QEnterEvent* event) override;
@@ -55,6 +66,7 @@ namespace sticky_note
         void leaveEvent(QEvent* event) override;
 
         void mouseMoveEvent(QMouseEvent* event) override;
+
         void mousePressEvent(QMouseEvent* event) override;
 
         void mouseReleaseEvent(QMouseEvent* event) override;

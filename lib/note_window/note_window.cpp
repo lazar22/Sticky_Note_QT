@@ -17,11 +17,16 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     quit_action = new QAction("Quit", this);
     edit_action = new QAction("Edit", this);
     create_action = new QAction("New", this);
+    save_action = new QAction("Save", this);
 
     layout = new QVBoxLayout(this);
     top_layout = new QHBoxLayout();
 
     title_label = new QLabel(this);
+    note_label = new QLabel(this);
+
+    title_edit = new QLineEdit(this);
+    note_edit = new QTextEdit(this);
 
     edit_btn = new QPushButton(this);
     quit_btn = new QPushButton(this);
@@ -44,9 +49,30 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     connect(edit_btn, &QPushButton::clicked, edit_action, &QAction::trigger);
     edit_action->setShortcut(QKeySequence("Ctrl+E"));
 
+    connect(save_action, &QAction::triggered, this, &NoteWindow::save);
+    save_action->setShortcut(QKeySequence("Ctrl+S"));
+
     create_action->setShortcut(QKeySequence::New); // Ctrl + N
 
     title_label->setFont(note_fonts::TITLE_FONT);
+    title_label->setAlignment(Qt::AlignCenter);
+    title_label->setStyleSheet("background: transparent; border: none;");
+
+    title_edit->setFont(note_fonts::TITLE_FONT);
+    title_edit->setAlignment(Qt::AlignCenter);
+    title_edit->setStyleSheet("background: transparent; border: none;");
+    title_edit->hide();
+
+    note_label->setFont(note_fonts::REGULAR_FONT);
+    note_label->setWordWrap(true);
+    note_label->setAlignment(Qt::AlignCenter);
+    note_label->setStyleSheet("background: transparent; border: none;");
+
+    note_edit->setFont(note_fonts::REGULAR_FONT);
+    note_edit->setAlignment(Qt::AlignCenter);
+    note_edit->setStyleSheet("background: transparent; border: none;");
+    note_edit->hide();
+
     quit_btn->setEnabled(false);
     edit_btn->setEnabled(false);
 
@@ -54,15 +80,20 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     top_layout->addStretch();
     top_layout->addWidget(title_label, 4, Qt::AlignCenter);
+    top_layout->addWidget(title_edit, 4, Qt::AlignCenter);
     top_layout->addWidget(edit_btn, 0, Qt::AlignCenter);
     top_layout->addWidget(quit_btn, 0, Qt::AlignCenter);
     top_layout->addStretch();
 
     layout->addLayout(top_layout);
+    layout->addWidget(note_label);
+    layout->addWidget(note_edit);
+
     setLayout(layout);
     addAction(quit_action);
     addAction(edit_action);
     addAction(create_action);
+    addAction(save_action);
 
     setStyleSheet("background: #fff6a8;");
     setAttribute(Qt::WA_DeleteOnClose);
@@ -81,8 +112,16 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     connect(edit_action, &QAction::triggered, this, [this]()
     {
-        auto* note_action = new NoteAction(this);
-        note_action->toggle_edit();
+        title_label->hide();
+        title_edit->setText(title_label->text());
+        title_edit->show();
+
+        note_label->hide();
+        note_edit->setText(note_label->text());
+        note_edit->setAlignment(Qt::AlignCenter);
+        note_edit->show();
+
+        title_edit->setFocus();
     });
 
     setMouseTracking(true);
@@ -98,6 +137,7 @@ void sticky_note::NoteWindow::set_title(const std::string _title)
 {
     setWindowTitle(QString::fromStdString(_title));
     title_label->setText(QString::fromStdString(_title));
+    title_edit->setText(QString::fromStdString(_title));
 }
 
 void sticky_note::NoteWindow::show(const bool is_note)
@@ -113,6 +153,27 @@ void sticky_note::NoteWindow::show(const bool is_note)
 void sticky_note::NoteWindow::close()
 {
     QWidget::close();
+}
+
+void sticky_note::NoteWindow::edit(const std::string _note)
+{
+    note_label->setText(QString::fromStdString(_note));
+    note_edit->setText(QString::fromStdString(_note));
+    note_edit->setAlignment(Qt::AlignCenter);
+}
+
+void sticky_note::NoteWindow::save()
+{
+    title_label->setText(title_edit->text());
+    note_label->setText(note_edit->toPlainText());
+
+    title_edit->hide();
+    title_label->show();
+
+    note_edit->hide();
+    note_label->show();
+
+    setWindowTitle(title_label->text());
 }
 
 void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
