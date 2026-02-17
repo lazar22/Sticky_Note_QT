@@ -12,7 +12,6 @@ sticky_note::NoteAction::NoteAction(QObject* parent) : QObject(parent)
 
 void sticky_note::NoteAction::create_note(IWindow* window)
 {
-    std::cout << "Create Note" << std::endl;
     window->init(note_window::WIDTH, note_window::HEIGHT, note_window::TITLE);
     window->show(true);
 }

@@ -8,6 +8,8 @@
 #include <QDebug> // Testing
 
 #include "shared.h"
+#include <QScreen>
+#include <QGuiApplication>
 
 static constexpr int WINDOW_MARGIN = 8;
 
@@ -55,21 +57,20 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     create_action->setShortcut(QKeySequence::New); // Ctrl + N
 
     title_label->setFont(note_fonts::TITLE_FONT);
-    title_label->setAlignment(Qt::AlignCenter);
+    title_label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     title_label->setStyleSheet("background: transparent; border: none;");
 
     title_edit->setFont(note_fonts::TITLE_FONT);
-    title_edit->setAlignment(Qt::AlignCenter);
+    title_edit->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
     title_edit->setStyleSheet("background: transparent; border: none;");
     title_edit->hide();
 
     note_label->setFont(note_fonts::REGULAR_FONT);
     note_label->setWordWrap(true);
-    note_label->setAlignment(Qt::AlignCenter);
+    note_label->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     note_label->setStyleSheet("background: transparent; border: none;");
 
     note_edit->setFont(note_fonts::REGULAR_FONT);
-    note_edit->setAlignment(Qt::AlignCenter);
     note_edit->setStyleSheet("background: transparent; border: none;");
     note_edit->hide();
 
@@ -79,15 +80,15 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     layout->setContentsMargins(WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN);
 
     top_layout->addStretch();
-    top_layout->addWidget(title_label, 4, Qt::AlignCenter);
-    top_layout->addWidget(title_edit, 4, Qt::AlignCenter);
-    top_layout->addWidget(edit_btn, 0, Qt::AlignCenter);
-    top_layout->addWidget(quit_btn, 0, Qt::AlignCenter);
+    top_layout->addWidget(title_label, 1);
+    top_layout->addWidget(title_edit, 1);
+    top_layout->addWidget(edit_btn, 0);
+    top_layout->addWidget(quit_btn, 0);
     top_layout->addStretch();
 
     layout->addLayout(top_layout);
-    layout->addWidget(note_label);
-    layout->addWidget(note_edit);
+    layout->addWidget(note_label, 1);
+    layout->addWidget(note_edit, 1);
 
     setLayout(layout);
     addAction(quit_action);
@@ -112,16 +113,22 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     connect(edit_action, &QAction::triggered, this, [this]()
     {
-        title_label->hide();
-        title_edit->setText(title_label->text());
-        title_edit->show();
+        if (title_edit->isHidden())
+        {
+            title_label->hide();
+            title_edit->setText(title_label->text());
+            title_edit->show();
 
-        note_label->hide();
-        note_edit->setText(note_label->text());
-        note_edit->setAlignment(Qt::AlignCenter);
-        note_edit->show();
+            note_label->hide();
+            note_edit->setText(note_label->text());
+            note_edit->show();
 
-        title_edit->setFocus();
+            title_edit->setFocus();
+        }
+        else
+        {
+            save();
+        }
     });
 
     setMouseTracking(true);
@@ -129,7 +136,18 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
 void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string _title)
 {
-    resize(_w, _h);
+    QScreen* screen = QGuiApplication::primaryScreen();
+    if (screen)
+    {
+        QRect screenGeometry = screen->geometry();
+        int width = screenGeometry.width() * 0.15; // 15% of screen width
+        int height = screenGeometry.height() * 0.25; // 25% of screen height
+        resize(width, height);
+    }
+    else
+    {
+        resize(_w, _h);
+    }
     set_title(_title);
 }
 
@@ -159,7 +177,6 @@ void sticky_note::NoteWindow::edit(const std::string _note)
 {
     note_label->setText(QString::fromStdString(_note));
     note_edit->setText(QString::fromStdString(_note));
-    note_edit->setAlignment(Qt::AlignCenter);
 }
 
 void sticky_note::NoteWindow::save()
