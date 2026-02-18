@@ -168,10 +168,10 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     note_edit->setStyleSheet("background: transparent; border: none;");
     note_edit->hide();
 
-    quit_btn->setVisible(false);
-    edit_btn->setVisible(false);
-    color_btn->setVisible(false);
-    pin_btn->setVisible(false);
+    quit_btn->setEnabled(false);
+    edit_btn->setEnabled(false);
+    color_btn->setEnabled(false);
+    pin_btn->setEnabled(false);
 
     layout->setContentsMargins(WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN);
 
@@ -334,10 +334,10 @@ void sticky_note::NoteWindow::change_color(const QColor& color)
 
 void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
 {
-    quit_btn->setVisible(true);
-    edit_btn->setVisible(true);
-    color_btn->setVisible(true);
-    pin_btn->setVisible(true);
+    quit_btn->setEnabled(true);
+    edit_btn->setEnabled(true);
+    color_btn->setEnabled(true);
+    pin_btn->setEnabled(true);
     setCursor(Qt::OpenHandCursor);
     QWidget::enterEvent(event);
 }
@@ -346,10 +346,10 @@ void sticky_note::NoteWindow::leaveEvent(QEvent* event)
 {
     if (!is_menu_active)
     {
-        quit_btn->setVisible(false);
-        edit_btn->setVisible(false);
-        color_btn->setVisible(false);
-        pin_btn->setVisible(false);
+        quit_btn->setEnabled(false);
+        edit_btn->setEnabled(false);
+        color_btn->setEnabled(false);
+        pin_btn->setEnabled(false);
         unsetCursor();
     }
     QWidget::leaveEvent(event);
