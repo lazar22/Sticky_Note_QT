@@ -3,9 +3,9 @@
 //
 
 #include "note_window.h"
-#include "../note_action/note_action.h"
+#include "note_action/note_action.h"
 #include "shared.h"
-#include "../save_handler/save_handler.h"
+#include "save_handler/save_handler.h"
 
 #include <QDebug> // Testing
 
