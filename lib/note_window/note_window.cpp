@@ -33,6 +33,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     layout = new QVBoxLayout(this);
     top_layout = new QHBoxLayout();
+    button_layout = new QBoxLayout(QBoxLayout::TopToBottom);
 
     title_label = new QLabel(this);
     note_label = new QTextBrowser(this);
@@ -156,11 +157,11 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     create_action->setShortcut(QKeySequence::New); // Ctrl + N
 
     title_label->setFont(note_fonts::TITLE_FONT);
-    title_label->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    title_label->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     title_label->setStyleSheet("background: transparent; border: none;");
 
     title_edit->setFont(note_fonts::TITLE_FONT);
-    title_edit->setAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    title_edit->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     title_edit->setStyleSheet("background: transparent; border: none;");
     title_edit->hide();
 
@@ -178,14 +179,18 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     layout->setContentsMargins(WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN);
 
-    top_layout->addStretch();
+    button_layout->setSpacing(0);
+    button_layout->setContentsMargins(0, 0, 0, 0);
+    button_layout->addWidget(quit_btn);
+    button_layout->addWidget(pin_btn);
+    button_layout->addWidget(color_btn);
+    button_layout->addWidget(edit_btn);
+
     top_layout->addWidget(title_label, 1);
     top_layout->addWidget(title_edit, 1);
-    top_layout->addWidget(edit_btn, 0);
-    top_layout->addWidget(color_btn, 0);
-    top_layout->addWidget(pin_btn, 0);
-    top_layout->addWidget(quit_btn, 0);
     top_layout->addStretch();
+    top_layout->addLayout(button_layout);
+    top_layout->setAlignment(button_layout, Qt::AlignTop);
 
     layout->addLayout(top_layout);
     layout->addWidget(note_label);

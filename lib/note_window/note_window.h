@@ -55,6 +55,7 @@ namespace sticky_note
         QPushButton* pin_btn = nullptr;
         QPushButton* color_pick_btn = nullptr;
 
+        QBoxLayout* button_layout = nullptr;
         QHBoxLayout* top_layout = nullptr;
         QVBoxLayout* layout = nullptr;
         QGridLayout* grid_layout = nullptr;
