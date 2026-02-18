@@ -5,5 +5,8 @@
         <file>icons/pen.png</file>
         <file>icons/wheel.png</file>
         <file>icons/pin.png</file>
+        <file>icons/pin_active.png</file>
+        <file>icons/pen_active.png</file>
+        <file>icons/end.png</file>
     </qresource>
 </RCC>

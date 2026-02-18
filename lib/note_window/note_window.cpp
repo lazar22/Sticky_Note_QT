@@ -136,7 +136,8 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     auto pin_func = [this]()
     {
         is_pinned = !is_pinned;
-        show(true); // required after setWindowFlags, now respects is_pinned
+        pin_btn->setIcon(is_pinned ? QIcon(":/icons/pin_active.png") : QIcon(":/icons/pin.png"));
+        show(true);
         SaveHandler::save_to_json({
             id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned
         });
@@ -223,6 +224,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
             note_edit->show();
 
             title_edit->setFocus();
+            edit_btn->setIcon(QIcon(":/icons/pen_active.png"));
         }
         else
         {
@@ -244,6 +246,10 @@ sticky_note::NoteWindow::NoteWindow(QUuid _id, QPoint _pos, QColor _color, QStri
     set_title(_title.toStdString());
     edit(_text.toStdString());
     setStyleSheet("background: " + current_color.name() + ";");
+    if (is_pinned)
+    {
+        pin_btn->setIcon(QIcon(":/icons/pin_active.png"));
+    }
 }
 
 void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string _title)
@@ -309,6 +315,8 @@ void sticky_note::NoteWindow::save()
 
     note_edit->hide();
     note_label->show();
+
+    edit_btn->setIcon(QIcon(":/icons/pen.png"));
 
     setWindowTitle(title_label->text());
     SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned});
