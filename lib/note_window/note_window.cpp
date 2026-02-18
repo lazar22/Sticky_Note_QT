@@ -32,7 +32,8 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     pin_action = new QAction("Pin", this);
 
     layout = new QVBoxLayout(this);
-    top_layout = new QHBoxLayout();
+    auto* content_layout = new QHBoxLayout();
+    auto* text_layout = new QVBoxLayout();
     button_layout = new QBoxLayout(QBoxLayout::TopToBottom);
 
     title_label = new QLabel(this);
@@ -186,17 +187,17 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     button_layout->addWidget(color_btn);
     button_layout->addWidget(edit_btn);
 
-    top_layout->addWidget(title_label, 1);
-    top_layout->addWidget(title_edit, 1);
-    top_layout->addStretch();
-    top_layout->addLayout(button_layout);
-    top_layout->setAlignment(button_layout, Qt::AlignTop);
+    text_layout->addWidget(title_label);
+    text_layout->addWidget(title_edit);
+    text_layout->addWidget(note_label, 1);
+    text_layout->addWidget(note_edit, 1);
+    text_layout->setSpacing(2);
 
-    layout->addLayout(top_layout);
-    layout->addWidget(note_label);
-    layout->addWidget(note_edit, 1);
+    content_layout->addLayout(text_layout, 1);
+    content_layout->addLayout(button_layout);
+    content_layout->setAlignment(button_layout, Qt::AlignTop);
 
-    layout->addStretch();
+    layout->addLayout(content_layout);
 
     setLayout(layout);
     addAction(quit_action);
