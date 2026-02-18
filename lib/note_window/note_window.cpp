@@ -4,11 +4,11 @@
 
 #include "note_window.h"
 #include "note_action/note_action.h"
+#include "shared.h"
+#include "save_handler/save_handler.h"
 
 #include <QDebug> // Testing
 
-#include "shared.h"
-#include "save_handler/save_handler.h"
 #include <QScreen>
 #include <QGuiApplication>
 #include <QDir>

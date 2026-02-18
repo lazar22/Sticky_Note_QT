@@ -14,7 +14,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
-#include "../scaling_button/scaling_button.h"
+#include "scaling_button/scaling_button.h"
 #include <QMenu>
 #include <QWidgetAction>
 #include <QGridLayout>
