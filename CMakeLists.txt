@@ -30,6 +30,7 @@ add_executable(sticky_note
         lib/note_action/note_action.cpp
         lib/note_window/note_window.cpp
         lib/save_handler/save_handler.cpp
+        lib/scaling_button/scaling_button.cpp
         sticky_note.desktop
         resources.qrc
 )

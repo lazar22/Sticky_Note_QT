@@ -42,10 +42,10 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     title_edit = new QLineEdit(this);
     note_edit = new QTextEdit(this);
 
-    edit_btn = new QPushButton(this);
-    quit_btn = new QPushButton(this);
-    color_btn = new QPushButton(this);
-    pin_btn = new QPushButton(this);
+    edit_btn = new ScalingButton(this);
+    quit_btn = new ScalingButton(this);
+    color_btn = new ScalingButton(this);
+    pin_btn = new ScalingButton(this);
 
     note_label->setFrameStyle(QFrame::NoFrame);
     note_label->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -61,6 +61,12 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     color_btn->setFixedSize(circle_size, circle_size);
     pin_btn->setFixedSize(circle_size, circle_size);
 
+    constexpr QSize base_icon_size(24, 24);
+    edit_btn->setBaseIconSize(base_icon_size);
+    quit_btn->setBaseIconSize(base_icon_size);
+    color_btn->setBaseIconSize(base_icon_size);
+    pin_btn->setBaseIconSize(base_icon_size);
+
     edit_btn->setIcon(QIcon(":/icons/pen.png"));
     quit_btn->setIcon(QIcon(":/icons/exit.png"));
     color_btn->setIcon(QIcon(":/icons/wheel.png"));
@@ -70,6 +76,13 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     quit_btn->setFlat(true);
     color_btn->setFlat(true);
     pin_btn->setFlat(true);
+
+    quit_btn->setHoverBackground(QColor("#e74c3c"), circle_size / 2);
+
+    edit_btn->setToolTip("Edit (Ctrl+E)");
+    quit_btn->setToolTip("Quit (Ctrl+W)");
+    color_btn->setToolTip("Color (Ctrl+C)");
+    pin_btn->setToolTip("Pin (Ctrl+P)");
 
     edit_btn->setCursor(Qt::PointingHandCursor);
     quit_btn->setCursor(Qt::PointingHandCursor);
@@ -178,7 +191,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     color_btn->setEnabled(false);
     pin_btn->setEnabled(false);
 
-    layout->setContentsMargins(WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN);
+    layout->setContentsMargins(WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN / 2);
 
     button_layout->setSpacing(0);
     button_layout->setContentsMargins(0, 0, 0, 0);
@@ -207,7 +220,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     addAction(color_action);
     addAction(pin_action);
 
-    setStyleSheet(QString("#NoteWindow { background: %1; }").arg(current_color.name()));
+    apply_styles();
     setAttribute(Qt::WA_DeleteOnClose);
     setMinimumSize(sticky_note::note_window::MIN_WIDTH, sticky_note::note_window::MIN_HEIGHT);
 
@@ -258,7 +271,8 @@ sticky_note::NoteWindow::NoteWindow(QUuid _id, QPoint _pos, QColor _color, QStri
     move(_pos);
     set_title(_title.toStdString());
     edit(_text.toStdString());
-    setStyleSheet(QString("#NoteWindow { background: %1; }").arg(current_color.name()));
+
+    apply_styles();
     if (is_pinned)
     {
         pin_btn->setIcon(QIcon(":/icons/pin_active.png"));
@@ -342,10 +356,19 @@ void sticky_note::NoteWindow::save()
 void sticky_note::NoteWindow::change_color(const QColor& color)
 {
     current_color = color;
-    setStyleSheet(QString("#NoteWindow { background: %1; }").arg(current_color.name()));
+    apply_styles();
     SaveHandler::save_to_json({
         id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
     });
+}
+
+void sticky_note::NoteWindow::apply_styles()
+{
+    const QString style = QString(
+        "#NoteWindow { background: %1; }"
+        "QToolTip { color: #ffffff; background-color: %1; border: 1px solid #000000; padding: 6px; border-radius: 6px; }"
+    ).arg(current_color.name());
+    setStyleSheet(style);
 }
 
 void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)

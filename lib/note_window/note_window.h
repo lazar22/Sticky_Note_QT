@@ -14,6 +14,7 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QPushButton>
+#include "../scaling_button/scaling_button.h"
 #include <QMenu>
 #include <QWidgetAction>
 #include <QGridLayout>
@@ -50,10 +51,10 @@ namespace sticky_note
         QLineEdit* title_edit = nullptr;
         QTextEdit* note_edit = nullptr;
 
-        QPushButton* quit_btn = nullptr;
-        QPushButton* edit_btn = nullptr;
-        QPushButton* color_btn = nullptr;
-        QPushButton* pin_btn = nullptr;
+        ScalingButton* quit_btn = nullptr;
+        ScalingButton* edit_btn = nullptr;
+        ScalingButton* color_btn = nullptr;
+        ScalingButton* pin_btn = nullptr;
         QPushButton* color_pick_btn = nullptr;
 
         QBoxLayout* button_layout = nullptr;
@@ -107,6 +108,8 @@ namespace sticky_note
         void update_font_sizes() const;
 
         Qt::Edges get_resize_edges(const QPoint& pos) const;
+
+        void apply_styles();
 
         static QString to_view_markdown(const QString& md);
 
