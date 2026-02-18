@@ -9,6 +9,7 @@
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
+    QApplication::setQuitOnLastWindowClosed(false);
 
     sticky_note::MainWindow main_window;
     main_window.init(

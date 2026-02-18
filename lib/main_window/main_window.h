@@ -11,6 +11,7 @@
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QSystemTrayIcon>
+#include <QCloseEvent>
 
 #include "IWindow.h"
 #include "note_action/note_action.h"
@@ -68,11 +69,13 @@ namespace sticky_note
 
     protected:
         void changeEvent(QEvent* event) override;
+        void closeEvent(QCloseEvent* event) override;
 
-    private slots:
+    private
+        slots :
+        
         void restoreFromTray();
         void load_notes();
     };
 }
-
 #endif //MAIN_WINDOW_H

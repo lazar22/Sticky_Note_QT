@@ -138,6 +138,15 @@ void sticky_note::MainWindow::changeEvent(QEvent* event)
     QWidget::changeEvent(event);
 }
 
+void sticky_note::MainWindow::closeEvent(QCloseEvent* event)
+{
+    if (tray_icon->isVisible())
+    {
+        hide();
+        event->ignore();
+    }
+}
+
 void sticky_note::MainWindow::restoreFromTray()
 {
     show(false);
