@@ -221,6 +221,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     addAction(pin_action);
 
     apply_styles();
+
     setAttribute(Qt::WA_DeleteOnClose);
     setMinimumSize(sticky_note::note_window::MIN_WIDTH, sticky_note::note_window::MIN_HEIGHT);
 
@@ -365,10 +366,15 @@ void sticky_note::NoteWindow::change_color(const QColor& color)
 void sticky_note::NoteWindow::apply_styles()
 {
     const QString style = QString(
-        "#NoteWindow { background: %1; }"
-        "QToolTip { color: #ffffff; background-color: %1; border: 1px solid #000000; padding: 6px; border-radius: 6px; }"
+        "#NoteWindow { background: %1; border: 1px solid black; color: black; }"
+        "QToolTip { color: black; background-color: %1; border: 1px solid #000000; padding: 6px; border-radius: 6px; }"
+        "QLabel, QTextBrowser, QLineEdit, QTextEdit { color: black; }"
     ).arg(current_color.name());
     setStyleSheet(style);
+
+    if (edit_btn) edit_btn->setHoverBackground(current_color.darker(110), 18);
+    if (color_btn) color_btn->setHoverBackground(current_color.darker(110), 18);
+    if (pin_btn) pin_btn->setHoverBackground(current_color.darker(110), 18);
 }
 
 void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
@@ -583,7 +589,6 @@ void sticky_note::NoteWindow::update_font_sizes() const
     const int w = width();
     const int h = height();
 
-    // Base font size on the smaller dimension
     const int base_dim = std::min(w, h);
 
     const int title_size = std::max(12, base_dim / 10);
