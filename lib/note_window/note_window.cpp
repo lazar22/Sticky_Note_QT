@@ -233,7 +233,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
             title_edit->show();
 
             note_label->hide();
-            note_edit->setPlainText(note_label->toMarkdown());
+            note_edit->setPlainText(from_view_markdown(note_label->toMarkdown()));
             note_edit->show();
 
             title_edit->setFocus();
@@ -284,7 +284,9 @@ void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string
     {
         set_title(_title);
     }
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toMarkdown(), is_pinned});
+    SaveHandler::save_to_json({
+        id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
+    });
 }
 
 void sticky_note::NoteWindow::set_title(const std::string _title)
@@ -312,7 +314,7 @@ void sticky_note::NoteWindow::close()
 
 void sticky_note::NoteWindow::edit(const std::string _note)
 {
-    note_label->setMarkdown(QString::fromStdString(_note));
+    note_label->setMarkdown(to_view_markdown(QString::fromStdString(_note)));
     note_label->updateGeometry();
     note_edit->setPlainText(QString::fromStdString(_note));
 }
@@ -320,7 +322,7 @@ void sticky_note::NoteWindow::edit(const std::string _note)
 void sticky_note::NoteWindow::save()
 {
     title_label->setText(title_edit->text());
-    note_label->setMarkdown(note_edit->toPlainText());
+    note_label->setMarkdown(to_view_markdown(note_edit->toPlainText()));
     note_label->updateGeometry();
 
     title_edit->hide();
@@ -332,14 +334,18 @@ void sticky_note::NoteWindow::save()
     edit_btn->setIcon(QIcon(":/icons/pen.png"));
 
     setWindowTitle(title_label->text());
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toMarkdown(), is_pinned});
+    SaveHandler::save_to_json({
+        id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
+    });
 }
 
 void sticky_note::NoteWindow::change_color(const QColor& color)
 {
     current_color = color;
     setStyleSheet(QString("#NoteWindow { background: %1; }").arg(current_color.name()));
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toMarkdown(), is_pinned});
+    SaveHandler::save_to_json({
+        id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
+    });
 }
 
 void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
@@ -415,8 +421,36 @@ void sticky_note::NoteWindow::mouseMoveEvent(QMouseEvent* event)
         Qt::Edges edges = get_resize_edges(event->position().toPoint());
         if (edges == Qt::Edges())
         {
-            if (cursor().shape() != Qt::OpenHandCursor && !is_menu_active)
+            bool over_checkbox = false;
+            if (note_label->isVisible() && note_label->geometry().contains(event->pos()))
+            {
+                QPoint labelPos = note_label->mapFromParent(event->pos());
+                QTextCursor cursor = note_label->cursorForPosition(labelPos);
+                QRect charRect = note_label->cursorRect(cursor);
+
+                // Check if the cursor is reasonably close to the character position
+                if (std::abs(labelPos.x() - (charRect.x() + charRect.width() / 2)) < 35)
+                {
+                    QTextCursor selectCursor = cursor;
+                    selectCursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor);
+                    QString selectedText = selectCursor.selectedText();
+
+                    if (selectedText == "☐" || selectedText == "☑")
+                    {
+                        over_checkbox = true;
+                    }
+                }
+            }
+
+            if (over_checkbox)
+            {
+                if (cursor().shape() != Qt::PointingHandCursor)
+                    setCursor(Qt::PointingHandCursor);
+            }
+            else if (cursor().shape() != Qt::OpenHandCursor && !is_menu_active)
+            {
                 setCursor(Qt::OpenHandCursor);
+            }
         }
         else
         {
@@ -455,6 +489,40 @@ void sticky_note::NoteWindow::mousePressEvent(QMouseEvent* event)
             return;
         }
 
+        if (note_label->isVisible() && note_label->geometry().contains(event->pos()))
+        {
+            const QPoint labelPos = note_label->mapFromParent(event->pos());
+            const QTextCursor cursor = note_label->cursorForPosition(labelPos);
+            const QRect charRect = note_label->cursorRect(cursor);
+
+            // Check if the click is reasonably close to the cursor position
+            const int center_x = charRect.x() + charRect.width() / 2;
+            const int dx = std::abs(labelPos.x() - center_x);
+
+            if (dx <= 20)
+            {
+                QTextCursor selectCursor = cursor;
+                selectCursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor);
+                QString selectedText = selectCursor.selectedText();
+
+                if (selectedText == "☐" || selectedText == "☑")
+                {
+                    const QString newText = selectCursor.selectedText() == "☐" ? "☑" : "☐";
+                    selectCursor.insertText(newText);
+
+                    // Update note_edit and save
+                    note_edit->setPlainText(from_view_markdown(note_label->toMarkdown()));
+                    SaveHandler::save_to_json({
+                        id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()),
+                        is_pinned
+                    });
+
+                    event->accept();
+                    return;
+                }
+            }
+        }
+
         is_dragging = true;
         setCursor(Qt::ClosedHandCursor);
         drag_offset = frameGeometry().topLeft() - event->globalPosition().toPoint();
@@ -472,7 +540,7 @@ void sticky_note::NoteWindow::mouseReleaseEvent(QMouseEvent* event)
             is_resizing = false;
             setCursor(Qt::OpenHandCursor);
             SaveHandler::save_to_json({
-                id, pos(), current_color, title_label->text(), note_label->toMarkdown(), is_pinned
+                id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
             });
             event->accept();
         }
@@ -487,16 +555,16 @@ void sticky_note::NoteWindow::resizeEvent(QResizeEvent* event)
     update_font_sizes();
 }
 
-void sticky_note::NoteWindow::update_font_sizes()
+void sticky_note::NoteWindow::update_font_sizes() const
 {
-    int w = width();
-    int h = height();
+    const int w = width();
+    const int h = height();
 
     // Base font size on the smaller dimension
-    int base_dim = std::min(w, h);
+    const int base_dim = std::min(w, h);
 
-    int title_size = std::max(12, base_dim / 10);
-    int regular_size = std::max(10, base_dim / 15);
+    const int title_size = std::max(12, base_dim / 10);
+    const int regular_size = std::max(10, base_dim / 15);
 
     QFont title_font = title_label->font();
     title_font.setPointSize(title_size);
@@ -509,12 +577,36 @@ void sticky_note::NoteWindow::update_font_sizes()
     note_edit->setFont(regular_font);
 }
 
-Qt::Edges sticky_note::NoteWindow::get_resize_edges(const QPoint& pos)
+Qt::Edges sticky_note::NoteWindow::get_resize_edges(const QPoint& pos) const
 {
     Qt::Edges edges = Qt::Edges();
+
     if (pos.x() < RESIZE_HANDLE_SIZE) edges |= Qt::LeftEdge;
     if (pos.x() > width() - RESIZE_HANDLE_SIZE) edges |= Qt::RightEdge;
     if (pos.y() < RESIZE_HANDLE_SIZE) edges |= Qt::TopEdge;
     if (pos.y() > height() - RESIZE_HANDLE_SIZE) edges |= Qt::BottomEdge;
+
     return edges;
+}
+
+QString sticky_note::NoteWindow::to_view_markdown(const QString& md)
+{
+    QString result = md;
+
+    result.replace(QRegularExpression("^(\\s*[-*+] )\\[ \\]", QRegularExpression::MultilineOption), "\\1☐");
+    result.replace(QRegularExpression("^(\\s*[-*+] )\\[x\\]",
+                                      QRegularExpression::CaseInsensitiveOption | QRegularExpression::MultilineOption),
+                   "\\1☑");
+
+    return result;
+}
+
+QString sticky_note::NoteWindow::from_view_markdown(const QString& md)
+{
+    QString result = md;
+
+    result.replace(QRegularExpression("^(\\s*[-*+] )☐", QRegularExpression::MultilineOption), "\\1[ ]");
+    result.replace(QRegularExpression("^(\\s*[-*+] )☑", QRegularExpression::MultilineOption), "\\1[x]");
+
+    return result;
 }

@@ -21,6 +21,7 @@
 #include <QUuid>
 
 #include <QTextBrowser>
+#include <QRegularExpression>
 
 #include "IWindow.h"
 
@@ -103,8 +104,13 @@ namespace sticky_note
         void resizeEvent(QResizeEvent* event) override;
 
     private:
-        void update_font_sizes();
-        Qt::Edges get_resize_edges(const QPoint& pos);
+        void update_font_sizes() const;
+
+        Qt::Edges get_resize_edges(const QPoint& pos) const;
+
+        static QString to_view_markdown(const QString& md);
+
+        static QString from_view_markdown(const QString& md);
     };
 }
 
