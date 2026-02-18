@@ -9,6 +9,9 @@
 int main(int argc, char* argv[])
 {
     QApplication app(argc, argv);
+
+    QApplication::setApplicationName("StickyNote");
+    QApplication::setOrganizationName("BlueDragons");
     QApplication::setQuitOnLastWindowClosed(false);
 
     sticky_note::MainWindow main_window;

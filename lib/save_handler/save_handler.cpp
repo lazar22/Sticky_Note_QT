@@ -17,7 +17,8 @@ namespace sticky_note
         note_object["text"] = data.text;
 
         const QJsonDocument doc(note_object);
-        const QString path = QDir::current().absoluteFilePath("notes");
+        const QString path = get_save_path();
+        QDir().mkpath(path);
         QFile file(path + "/" + data.id.toString() + ".json");
         if (file.open(QIODevice::WriteOnly))
         {
@@ -28,7 +29,7 @@ namespace sticky_note
 
     void SaveHandler::delete_json(const QUuid& id)
     {
-        QString path = QDir::current().absoluteFilePath("notes");
+        QString path = get_save_path();
         QFile file(path + "/" + id.toString() + ".json");
         if (file.exists())
         {
@@ -39,7 +40,7 @@ namespace sticky_note
     QVector<NoteData> SaveHandler::load_notes()
     {
         QVector<NoteData> notes;
-        QString path = QDir::current().absoluteFilePath("notes");
+        QString path = get_save_path();
         QDir notes_dir(path);
         if (!notes_dir.exists())
         {
@@ -73,5 +74,10 @@ namespace sticky_note
             }
         }
         return notes;
+    }
+
+    QString SaveHandler::get_save_path()
+    {
+        return QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/notes";
     }
 }
