@@ -20,6 +20,7 @@ static constexpr int WINDOW_MARGIN = 8;
 sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     : QWidget(parent), id(QUuid::createUuid()), current_color("#fff6a8")
 {
+    setObjectName("NoteWindow");
     quit_action = new QAction("Quit", this);
     edit_action = new QAction("Edit", this);
     create_action = new QAction("New", this);
@@ -78,6 +79,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     connect(color_btn, &QPushButton::clicked, this, [this]()
     {
+        is_menu_active = true;
         QMenu menu(this);
 
         container = new QWidget(&menu);
@@ -123,6 +125,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
         });
 
         menu.exec(color_btn->mapToGlobal(QPoint(0, color_btn->height())));
+        is_menu_active = false;
     });
     connect(color_action, &QAction::triggered, this, [this]()
     {
@@ -195,7 +198,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     addAction(color_action);
     addAction(pin_action);
 
-    setStyleSheet("background: " + current_color.name() + ";");
+    setStyleSheet(QString("#NoteWindow { background: %1; }").arg(current_color.name()));
     setAttribute(Qt::WA_DeleteOnClose);
 
     connect(quit_action, &QAction::triggered, this, [this]()
@@ -245,7 +248,7 @@ sticky_note::NoteWindow::NoteWindow(QUuid _id, QPoint _pos, QColor _color, QStri
     move(_pos);
     set_title(_title.toStdString());
     edit(_text.toStdString());
-    setStyleSheet("background: " + current_color.name() + ";");
+    setStyleSheet(QString("#NoteWindow { background: %1; }").arg(current_color.name()));
     if (is_pinned)
     {
         pin_btn->setIcon(QIcon(":/icons/pin_active.png"));
@@ -325,7 +328,7 @@ void sticky_note::NoteWindow::save()
 void sticky_note::NoteWindow::change_color(const QColor& color)
 {
     current_color = color;
-    setStyleSheet(QString("background-color: %1;").arg(current_color.name()));
+    setStyleSheet(QString("#NoteWindow { background: %1; }").arg(current_color.name()));
     SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned});
 }
 
@@ -341,11 +344,14 @@ void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
 
 void sticky_note::NoteWindow::leaveEvent(QEvent* event)
 {
-    quit_btn->setVisible(false);
-    edit_btn->setVisible(false);
-    color_btn->setVisible(false);
-    pin_btn->setVisible(false);
-    unsetCursor();
+    if (!is_menu_active)
+    {
+        quit_btn->setVisible(false);
+        edit_btn->setVisible(false);
+        color_btn->setVisible(false);
+        pin_btn->setVisible(false);
+        unsetCursor();
+    }
     QWidget::leaveEvent(event);
 }
 

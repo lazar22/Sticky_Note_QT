@@ -64,6 +64,7 @@ namespace sticky_note
         bool is_dragging = false;
         QPoint drag_offset;
         bool is_pinned = false;
+        bool is_menu_active = false;
 
     public:
         explicit NoteWindow(QWidget* parent = nullptr);
