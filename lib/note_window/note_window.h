@@ -39,6 +39,7 @@ namespace sticky_note
         QAction* create_action = nullptr;
         QAction* save_action = nullptr;
         QAction* color_action = nullptr;
+        QAction* pin_action = nullptr;
 
         QWidgetAction* drop_down = nullptr;
 
@@ -51,6 +52,7 @@ namespace sticky_note
         QPushButton* quit_btn = nullptr;
         QPushButton* edit_btn = nullptr;
         QPushButton* color_btn = nullptr;
+        QPushButton* pin_btn = nullptr;
         QPushButton* color_pick_btn = nullptr;
 
         QHBoxLayout* top_layout = nullptr;
@@ -61,11 +63,12 @@ namespace sticky_note
 
         bool is_dragging = false;
         QPoint drag_offset;
+        bool is_pinned = false;
 
     public:
         explicit NoteWindow(QWidget* parent = nullptr);
         explicit NoteWindow(QUuid _id, QPoint _pos, QColor _color, QString _title, QString _text,
-                            QWidget* parent = nullptr);
+                            bool _is_pinned = false, QWidget* parent = nullptr);
 
         void init(int _w, int _h, std::string _title) override;
         ~NoteWindow() override = default;

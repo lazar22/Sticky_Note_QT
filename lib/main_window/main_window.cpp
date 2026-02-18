@@ -160,7 +160,7 @@ void sticky_note::MainWindow::load_notes()
     const QVector<NoteData> notes = SaveHandler::load_notes();
     for (const auto& data : notes)
     {
-        auto* note_window = new NoteWindow(data.id, data.pos, data.color, data.title, data.text);
+        auto* note_window = new NoteWindow(data.id, data.pos, data.color, data.title, data.text, data.is_pinned);
         auto* note_action = new NoteAction(note_window);
         note_action->create_note(note_window);
     }

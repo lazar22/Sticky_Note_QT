@@ -25,6 +25,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     create_action = new QAction("New", this);
     save_action = new QAction("Save", this);
     color_action = new QAction("Change Color", this);
+    pin_action = new QAction("Pin", this);
 
     layout = new QVBoxLayout(this);
     top_layout = new QHBoxLayout();
@@ -38,6 +39,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     edit_btn = new QPushButton(this);
     quit_btn = new QPushButton(this);
     color_btn = new QPushButton(this);
+    pin_btn = new QPushButton(this);
 
     note_label->setFrameStyle(QFrame::NoFrame);
     note_label->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -47,21 +49,26 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     note_label->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     note_label->setMinimumHeight(0);
 
-    edit_btn->setFixedSize(36, 36);
-    quit_btn->setFixedSize(36, 36);
-    color_btn->setFixedSize(36, 36);
+    constexpr int circle_size = 36;
+    edit_btn->setFixedSize(circle_size, circle_size);
+    quit_btn->setFixedSize(circle_size, circle_size);
+    color_btn->setFixedSize(circle_size, circle_size);
+    pin_btn->setFixedSize(circle_size, circle_size);
 
     edit_btn->setIcon(QIcon(":/icons/pen.png"));
     quit_btn->setIcon(QIcon(":/icons/exit.png"));
     color_btn->setIcon(QIcon(":/icons/wheel.png"));
+    pin_btn->setIcon(QIcon(":/icons/pin.png"));
 
     edit_btn->setFlat(true);
     quit_btn->setFlat(true);
     color_btn->setFlat(true);
+    pin_btn->setFlat(true);
 
     edit_btn->setCursor(Qt::PointingHandCursor);
     quit_btn->setCursor(Qt::PointingHandCursor);
     color_btn->setCursor(Qt::PointingHandCursor);
+    pin_btn->setCursor(Qt::PointingHandCursor);
 
     connect(quit_btn, &QPushButton::clicked, quit_action, &QAction::trigger);
     quit_action->setShortcut(QKeySequence::Close); // Ctrl + W
@@ -126,6 +133,19 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     connect(save_action, &QAction::triggered, this, &NoteWindow::save);
     save_action->setShortcut(QKeySequence("Ctrl+S"));
 
+    auto pin_func = [this]()
+    {
+        is_pinned = !is_pinned;
+        show(true); // required after setWindowFlags, now respects is_pinned
+        SaveHandler::save_to_json({
+            id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned
+        });
+    };
+
+    connect(pin_btn, &QPushButton::clicked, this, pin_func);
+    connect(pin_action, &QAction::triggered, this, pin_func);
+    pin_action->setShortcut(QKeySequence("Ctrl+P"));
+
     create_action->setShortcut(QKeySequence::New); // Ctrl + N
 
     title_label->setFont(note_fonts::TITLE_FONT);
@@ -144,9 +164,10 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     note_edit->setStyleSheet("background: transparent; border: none;");
     note_edit->hide();
 
-    quit_btn->setEnabled(false);
-    edit_btn->setEnabled(false);
-    color_btn->setEnabled(false);
+    quit_btn->setVisible(false);
+    edit_btn->setVisible(false);
+    color_btn->setVisible(false);
+    pin_btn->setVisible(false);
 
     layout->setContentsMargins(WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN);
 
@@ -155,6 +176,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     top_layout->addWidget(title_edit, 1);
     top_layout->addWidget(edit_btn, 0);
     top_layout->addWidget(color_btn, 0);
+    top_layout->addWidget(pin_btn, 0);
     top_layout->addWidget(quit_btn, 0);
     top_layout->addStretch();
 
@@ -170,6 +192,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     addAction(create_action);
     addAction(save_action);
     addAction(color_action);
+    addAction(pin_action);
 
     setStyleSheet("background: " + current_color.name() + ";");
     setAttribute(Qt::WA_DeleteOnClose);
@@ -211,11 +234,12 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 }
 
 sticky_note::NoteWindow::NoteWindow(QUuid _id, QPoint _pos, QColor _color, QString _title, QString _text,
-                                    QWidget* parent)
+                                    bool _is_pinned, QWidget* parent)
     : NoteWindow(parent)
 {
     id = _id;
     current_color = _color;
+    is_pinned = _is_pinned;
     move(_pos);
     set_title(_title.toStdString());
     edit(_text.toStdString());
@@ -241,7 +265,7 @@ void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string
     {
         set_title(_title);
     }
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText()});
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned});
 }
 
 void sticky_note::NoteWindow::set_title(const std::string _title)
@@ -254,6 +278,10 @@ void sticky_note::NoteWindow::set_title(const std::string _title)
 void sticky_note::NoteWindow::show(const bool is_note)
 {
     Qt::WindowFlags flags = Qt::FramelessWindowHint | Qt::Window | Qt::Tool;
+    if (is_pinned)
+    {
+        flags |= Qt::WindowStaysOnTopHint;
+    }
     setWindowFlags(flags);
     QWidget::show();
 }
@@ -283,30 +311,32 @@ void sticky_note::NoteWindow::save()
     note_label->show();
 
     setWindowTitle(title_label->text());
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText()});
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned});
 }
 
 void sticky_note::NoteWindow::change_color(const QColor& color)
 {
     current_color = color;
     setStyleSheet(QString("background-color: %1;").arg(current_color.name()));
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText()});
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned});
 }
 
 void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
 {
-    quit_btn->setEnabled(true);
-    edit_btn->setEnabled(true);
-    color_btn->setEnabled(true);
+    quit_btn->setVisible(true);
+    edit_btn->setVisible(true);
+    color_btn->setVisible(true);
+    pin_btn->setVisible(true);
     setCursor(Qt::OpenHandCursor);
     QWidget::enterEvent(event);
 }
 
 void sticky_note::NoteWindow::leaveEvent(QEvent* event)
 {
-    quit_btn->setEnabled(false);
-    edit_btn->setEnabled(false);
-    color_btn->setEnabled(false);
+    quit_btn->setVisible(false);
+    edit_btn->setVisible(false);
+    color_btn->setVisible(false);
+    pin_btn->setVisible(false);
     unsetCursor();
     QWidget::leaveEvent(event);
 }
@@ -346,7 +376,9 @@ void sticky_note::NoteWindow::mouseReleaseEvent(QMouseEvent* event)
     {
         is_dragging = false;
         setCursor(Qt::OpenHandCursor);
-        SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText()});
+        SaveHandler::save_to_json({
+            id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned
+        });
         event->accept();
     }
 

@@ -4,5 +4,6 @@
         <file>icons/note_icon.png</file>
         <file>icons/pen.png</file>
         <file>icons/wheel.png</file>
+        <file>icons/pin.png</file>
     </qresource>
 </RCC>

@@ -15,6 +15,7 @@ namespace sticky_note
         note_object["color"] = data.color.name();
         note_object["title"] = data.title;
         note_object["text"] = data.text;
+        note_object["is_pinned"] = data.is_pinned;
 
         const QJsonDocument doc(note_object);
         const QString path = get_save_path();
@@ -69,6 +70,7 @@ namespace sticky_note
                     note.color = QColor(obj["color"].toString());
                     note.title = obj["title"].toString();
                     note.text = obj["text"].toString();
+                    note.is_pinned = obj["is_pinned"].toBool();
                     notes.push_back(note);
                 }
             }

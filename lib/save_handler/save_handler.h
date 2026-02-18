@@ -24,6 +24,7 @@ namespace sticky_note
         QColor color;
         QString title;
         QString text;
+        bool is_pinned = false;
     };
 
     class SaveHandler
