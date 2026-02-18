@@ -233,7 +233,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
             title_edit->show();
 
             note_label->hide();
-            note_edit->setText(note_label->toPlainText());
+            note_edit->setPlainText(note_label->toMarkdown());
             note_edit->show();
 
             title_edit->setFocus();
@@ -284,7 +284,7 @@ void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string
     {
         set_title(_title);
     }
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned});
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toMarkdown(), is_pinned});
 }
 
 void sticky_note::NoteWindow::set_title(const std::string _title)
@@ -312,15 +312,15 @@ void sticky_note::NoteWindow::close()
 
 void sticky_note::NoteWindow::edit(const std::string _note)
 {
-    note_label->setText(QString::fromStdString(_note));
+    note_label->setMarkdown(QString::fromStdString(_note));
     note_label->updateGeometry();
-    note_edit->setText(QString::fromStdString(_note));
+    note_edit->setPlainText(QString::fromStdString(_note));
 }
 
 void sticky_note::NoteWindow::save()
 {
     title_label->setText(title_edit->text());
-    note_label->setText(note_edit->toPlainText());
+    note_label->setMarkdown(note_edit->toPlainText());
     note_label->updateGeometry();
 
     title_edit->hide();
@@ -332,14 +332,14 @@ void sticky_note::NoteWindow::save()
     edit_btn->setIcon(QIcon(":/icons/pen.png"));
 
     setWindowTitle(title_label->text());
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned});
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toMarkdown(), is_pinned});
 }
 
 void sticky_note::NoteWindow::change_color(const QColor& color)
 {
     current_color = color;
     setStyleSheet(QString("#NoteWindow { background: %1; }").arg(current_color.name()));
-    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned});
+    SaveHandler::save_to_json({id, pos(), current_color, title_label->text(), note_label->toMarkdown(), is_pinned});
 }
 
 void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
@@ -472,7 +472,7 @@ void sticky_note::NoteWindow::mouseReleaseEvent(QMouseEvent* event)
             is_resizing = false;
             setCursor(Qt::OpenHandCursor);
             SaveHandler::save_to_json({
-                id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned
+                id, pos(), current_color, title_label->text(), note_label->toMarkdown(), is_pinned
             });
             event->accept();
         }
