@@ -103,6 +103,7 @@ namespace sticky_note
         void mouseReleaseEvent(QMouseEvent* event) override;
 
         void resizeEvent(QResizeEvent* event) override;
+        void update_height();
 
     private:
         void update_font_sizes() const;

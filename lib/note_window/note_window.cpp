@@ -184,7 +184,11 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     note_edit->setFont(note_fonts::REGULAR_FONT);
     note_edit->setStyleSheet("background: transparent; border: none;");
+    note_edit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    note_edit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     note_edit->hide();
+
+    connect(note_edit, &QTextEdit::textChanged, this, &NoteWindow::update_height);
 
     quit_btn->setEnabled(false);
     edit_btn->setEnabled(false);
@@ -330,15 +334,14 @@ void sticky_note::NoteWindow::close()
 void sticky_note::NoteWindow::edit(const std::string _note)
 {
     note_label->setMarkdown(to_view_markdown(QString::fromStdString(_note)));
-    note_label->updateGeometry();
     note_edit->setPlainText(QString::fromStdString(_note));
+    update_height();
 }
 
 void sticky_note::NoteWindow::save()
 {
     title_label->setText(title_edit->text());
     note_label->setMarkdown(to_view_markdown(note_edit->toPlainText()));
-    note_label->updateGeometry();
 
     title_edit->hide();
     title_label->show();
@@ -349,6 +352,7 @@ void sticky_note::NoteWindow::save()
     edit_btn->setIcon(QIcon(":/icons/pen.png"));
 
     setWindowTitle(title_label->text());
+    update_height();
     SaveHandler::save_to_json({
         id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
     });
@@ -580,8 +584,42 @@ void sticky_note::NoteWindow::mouseReleaseEvent(QMouseEvent* event)
 
 void sticky_note::NoteWindow::resizeEvent(QResizeEvent* event)
 {
+    update_height();
     QWidget::resizeEvent(event);
-    update_font_sizes();
+}
+
+void sticky_note::NoteWindow::update_height()
+{
+    int content_height = 0;
+    if (note_edit && !note_edit->isHidden())
+    {
+        content_height = note_edit->document()->size().height();
+    }
+    else if (note_label && !note_label->isHidden())
+    {
+        content_height = note_label->document()->size().height();
+    }
+
+    if (content_height > 0)
+    {
+        // Calculate the height occupied by other elements
+        int non_content_height = layout->contentsMargins().top() + layout->contentsMargins().bottom();
+        non_content_height += title_label->isHidden()
+                                  ? title_edit->sizeHint().height()
+                                  : title_label->sizeHint().height();
+        non_content_height += layout->spacing();
+
+        int target_height = content_height + non_content_height + 10; // Extra padding
+        if (target_height < sticky_note::note_window::MIN_HEIGHT)
+        {
+            target_height = sticky_note::note_window::MIN_HEIGHT;
+        }
+
+        if (height() != target_height)
+        {
+            resize(width(), target_height);
+        }
+    }
 }
 
 void sticky_note::NoteWindow::update_font_sizes() const
@@ -621,10 +659,15 @@ QString sticky_note::NoteWindow::to_view_markdown(const QString& md)
 {
     QString result = md;
 
+    // Render Markdown-like checkboxes as symbols
     result.replace(QRegularExpression("^(\\s*[-*+] )\\[ \\]", QRegularExpression::MultilineOption), "\\1☐");
     result.replace(QRegularExpression("^(\\s*[-*+] )\\[x\\]",
                                       QRegularExpression::CaseInsensitiveOption | QRegularExpression::MultilineOption),
                    "\\1☑");
+
+    // Preserve single newlines as visible line breaks in Markdown by converting to soft-breaks
+    // Markdown collapses single newlines inside a paragraph; adding two spaces before a newline forces a break
+    result.replace("\n", "  \n");
 
     return result;
 }
@@ -633,8 +676,12 @@ QString sticky_note::NoteWindow::from_view_markdown(const QString& md)
 {
     QString result = md;
 
+    // Convert rendered checkbox symbols back to Markdown-like syntax
     result.replace(QRegularExpression("^(\\s*[-*+] )☐", QRegularExpression::MultilineOption), "\\1[ ]");
     result.replace(QRegularExpression("^(\\s*[-*+] )☑", QRegularExpression::MultilineOption), "\\1[x]");
+
+    // Revert soft-breaks (two spaces before newline) back to plain newlines for storage/editing
+    result.replace("  \n", "\n");
 
     return result;
 }
