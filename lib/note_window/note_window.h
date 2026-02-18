@@ -62,7 +62,10 @@ namespace sticky_note
         QWidget* container = nullptr;
 
         bool is_dragging = false;
+        bool is_resizing = false;
         QPoint drag_offset;
+        QRect initial_geometry;
+        Qt::Edges resize_edges;
         bool is_pinned = false;
         bool is_menu_active = false;
 
@@ -96,6 +99,12 @@ namespace sticky_note
         void mousePressEvent(QMouseEvent* event) override;
 
         void mouseReleaseEvent(QMouseEvent* event) override;
+
+        void resizeEvent(QResizeEvent* event) override;
+
+    private:
+        void update_font_sizes();
+        Qt::Edges get_resize_edges(const QPoint& pos);
     };
 }
 

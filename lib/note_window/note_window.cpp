@@ -13,9 +13,12 @@
 #include <QGuiApplication>
 #include <QDir>
 #include <QFileInfo>
-#include <QStandardPaths>
+#include <QResizeEvent>
+#include <QMouseEvent>
+#include <QPainter>
 
 static constexpr int WINDOW_MARGIN = 8;
+static constexpr int RESIZE_HANDLE_SIZE = 10;
 
 sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     : QWidget(parent), id(QUuid::createUuid()), current_color("#fff6a8")
@@ -200,6 +203,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     setStyleSheet(QString("#NoteWindow { background: %1; }").arg(current_color.name()));
     setAttribute(Qt::WA_DeleteOnClose);
+    setMinimumSize(sticky_note::note_window::MIN_WIDTH, sticky_note::note_window::MIN_HEIGHT);
 
     connect(quit_action, &QAction::triggered, this, [this]()
     {
@@ -361,6 +365,64 @@ void sticky_note::NoteWindow::mouseMoveEvent(QMouseEvent* event)
     {
         move(event->globalPosition().toPoint() + drag_offset);
         event->accept();
+        return;
+    }
+
+    if (is_resizing && (event->buttons() & Qt::LeftButton))
+    {
+        QRect new_geometry = initial_geometry;
+        const QPoint global_pos = event->globalPosition().toPoint();
+        const QPoint delta = global_pos - (initial_geometry.topLeft() - drag_offset);
+
+        if (resize_edges & Qt::LeftEdge)
+        {
+            const int new_width = initial_geometry.width() - delta.x();
+            if (new_width >= minimumWidth())
+            {
+                new_geometry.setLeft(initial_geometry.left() + delta.x());
+            }
+        }
+        if (resize_edges & Qt::RightEdge)
+        {
+            new_geometry.setRight(initial_geometry.right() + delta.x());
+        }
+        if (resize_edges & Qt::TopEdge)
+        {
+            const int new_height = initial_geometry.height() - delta.y();
+            if (new_height >= minimumHeight())
+            {
+                new_geometry.setTop(initial_geometry.top() + delta.y());
+            }
+        }
+        if (resize_edges & Qt::BottomEdge)
+        {
+            new_geometry.setBottom(initial_geometry.bottom() + delta.y());
+        }
+
+        setGeometry(new_geometry);
+        event->accept();
+        return;
+    }
+
+    if (!is_dragging && !is_resizing)
+    {
+        Qt::Edges edges = get_resize_edges(event->position().toPoint());
+        if (edges == Qt::Edges())
+        {
+            if (cursor().shape() != Qt::OpenHandCursor && !is_menu_active)
+                setCursor(Qt::OpenHandCursor);
+        }
+        else
+        {
+            if ((edges & Qt::LeftEdge && edges & Qt::TopEdge) || (edges & Qt::RightEdge && edges & Qt::BottomEdge))
+                setCursor(Qt::SizeFDiagCursor);
+            else if ((edges & Qt::RightEdge && edges & Qt::TopEdge) || (edges & Qt::LeftEdge && edges & Qt::BottomEdge))
+                setCursor(Qt::SizeBDiagCursor);
+            else if (edges & Qt::LeftEdge || edges & Qt::RightEdge)
+                setCursor(Qt::SizeHorCursor);
+            else if (edges & Qt::TopEdge || edges & Qt::BottomEdge)
+                setCursor(Qt::SizeVerCursor);
+        }
     }
 
     QWidget::mouseMoveEvent(event);
@@ -370,6 +432,16 @@ void sticky_note::NoteWindow::mousePressEvent(QMouseEvent* event)
 {
     if (event->button() == Qt::LeftButton)
     {
+        resize_edges = get_resize_edges(event->position().toPoint());
+        if (resize_edges != Qt::Edges())
+        {
+            is_resizing = true;
+            initial_geometry = geometry();
+            drag_offset = initial_geometry.topLeft() - event->globalPosition().toPoint();
+            event->accept();
+            return;
+        }
+
         QWidget* child = childAt(event->position().toPoint());
         if (child && (qobject_cast<QAbstractButton*>(child) != nullptr))
         {
@@ -386,15 +458,57 @@ void sticky_note::NoteWindow::mousePressEvent(QMouseEvent* event)
 
 void sticky_note::NoteWindow::mouseReleaseEvent(QMouseEvent* event)
 {
-    if (event->button() == Qt::LeftButton && is_dragging)
+    if (event->button() == Qt::LeftButton)
     {
-        is_dragging = false;
-        setCursor(Qt::OpenHandCursor);
-        SaveHandler::save_to_json({
-            id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned
-        });
-        event->accept();
+        if (is_dragging || is_resizing)
+        {
+            is_dragging = false;
+            is_resizing = false;
+            setCursor(Qt::OpenHandCursor);
+            SaveHandler::save_to_json({
+                id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned
+            });
+            event->accept();
+        }
     }
 
     QWidget::mouseReleaseEvent(event);
+}
+
+void sticky_note::NoteWindow::resizeEvent(QResizeEvent* event)
+{
+    QWidget::resizeEvent(event);
+    update_font_sizes();
+}
+
+void sticky_note::NoteWindow::update_font_sizes()
+{
+    int w = width();
+    int h = height();
+
+    // Base font size on the smaller dimension
+    int base_dim = std::min(w, h);
+
+    int title_size = std::max(12, base_dim / 10);
+    int regular_size = std::max(10, base_dim / 15);
+
+    QFont title_font = title_label->font();
+    title_font.setPointSize(title_size);
+    title_label->setFont(title_font);
+    title_edit->setFont(title_font);
+
+    QFont regular_font = note_label->font();
+    regular_font.setPointSize(regular_size);
+    note_label->setFont(regular_font);
+    note_edit->setFont(regular_font);
+}
+
+Qt::Edges sticky_note::NoteWindow::get_resize_edges(const QPoint& pos)
+{
+    Qt::Edges edges = Qt::Edges();
+    if (pos.x() < RESIZE_HANDLE_SIZE) edges |= Qt::LeftEdge;
+    if (pos.x() > width() - RESIZE_HANDLE_SIZE) edges |= Qt::RightEdge;
+    if (pos.y() < RESIZE_HANDLE_SIZE) edges |= Qt::TopEdge;
+    if (pos.y() > height() - RESIZE_HANDLE_SIZE) edges |= Qt::BottomEdge;
+    return edges;
 }

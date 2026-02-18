@@ -21,6 +21,8 @@ namespace sticky_note
     {
         constexpr int WIDTH = 300;
         constexpr int HEIGHT = 300;
+        constexpr int MIN_WIDTH = 200;
+        constexpr int MIN_HEIGHT = 200;
         constexpr const char* TITLE = "Default Note Title";
     }
 
