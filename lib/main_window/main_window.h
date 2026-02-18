@@ -14,7 +14,7 @@
 #include <QCloseEvent>
 
 #include "IWindow.h"
-#include "note_action/note_action.h"
+#include "../note_action/note_action.h"
 
 namespace sticky_note
 {
@@ -72,7 +72,8 @@ namespace sticky_note
         void closeEvent(QCloseEvent* event) override;
 
     private
-        slots :
+        slots  :
+
         
         void restoreFromTray();
         void load_notes();

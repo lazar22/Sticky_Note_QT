@@ -5,8 +5,8 @@
 #include "main_window.h"
 
 #include "shared.h"
-#include "note_window/note_window.h"
-#include "save_handler/save_handler.h"
+#include "../note_window/note_window.h"
+#include "../save_handler/save_handler.h"
 
 #include <QTimer>
 #include <QMenu>
