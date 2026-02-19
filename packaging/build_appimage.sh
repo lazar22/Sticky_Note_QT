@@ -80,3 +80,11 @@ chmod +x "$APPDIR/AppRun"
 # Sanity check: make sure Qt got bundled (otherwise runtime will use system Qt)
 if [ ! -f "$APPDIR/usr/lib/libQt6Core.so.6" ] && [ ! -f "$APPDIR/usr/lib/x86_64-linux-gnu/libQt6Core.so.6" ]; then
   echo "ERROR: Qt6Core was not bundled into AppDir. linuxdeploy-plugin-qt likely didn't run correctly."
+  exit 1
+fi
+
+# Finally, create the AppImage
+mkdir -p "$DISTDIR"
+"$APPIMAGETOOL" "$APPDIR" "$DISTDIR/Sticky_Note-x86_64.AppImage"
+
+echo "AppImage created at $DISTDIR/Sticky_Note-x86_64.AppImage"
