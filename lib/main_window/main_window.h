@@ -23,6 +23,7 @@ namespace sticky_note
         Q_OBJECT
 
         QPushButton* create_btn = nullptr;
+        QPushButton* manage_btn = nullptr;
         QWindow* main_window_app = nullptr;
 
         QSystemTrayIcon* tray_icon = nullptr;
@@ -73,6 +74,7 @@ namespace sticky_note
 
     private
         slots  :
+
 
         
         void restoreFromTray();

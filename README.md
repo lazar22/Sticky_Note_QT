@@ -11,8 +11,12 @@ A lightweight, feature-rich sticky note application for Linux (Ubuntu) built wit
 - **Customizable Colors:** Choose from a set of predefined pastel colors or select any custom color for each note.
 - **Pin to Top:** Pin important notes to keep them above all other windows.
 - **Persistence:** Your notes are automatically saved and restored when you restart the application.
-- **System Tray Integration:** Access all features from the system tray, including 'Restore', 'Close All Notes', and '
-  Quit'.
+- **Manage Notes (Import/Export):** Easily import or export your notes as JSON files. Perfect for backups or moving
+  notes between devices.
+- **Drag & Drop Support:** Quickly import notes by simply dragging and dropping a `.json` file into the Manage Notes
+  window.
+- **System Tray Integration:** Access all features from the system tray, including 'Manage Notes', 'Restore', 'Close All
+  Notes', and 'Quit'.
 - **Borderless & Resizable:** Frameless windows that can be moved and resized with ease.
 
 ## Requirements
@@ -64,7 +68,12 @@ To bundle the application for Windows:
 
 ## Usage
 
-- **System Tray:** Use the system tray icon to create new notes, restore the main window, or close all notes.
+- **System Tray:** Use the system tray icon to create new notes, manage existing notes, restore the main window, or
+  close all notes.
+- **Manage Notes:**
+    - **Upload Notes:** Click the button or drag and drop a `.json` file into the window to import notes. Supports both
+      single-note objects and arrays of notes.
+    - **Download Notes:** Export all your current notes into a single `.json` file for backup.
 - **Note Actions:**
     - **Pen Icon:** Edit the note.
     - **Color Wheel:** Change the note's color.

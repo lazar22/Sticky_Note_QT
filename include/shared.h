@@ -28,6 +28,13 @@ namespace sticky_note
         constexpr const char* TITLE = "Default Note Title";
     }
 
+    namespace menage_window
+    {
+        constexpr int WIDTH = 400;
+        constexpr int HEIGHT = 200;
+        constexpr const char* TITLE = "Manage Notes";
+    }
+
     namespace note_fonts
     {
         inline QFont TITLE_FONT() { return QFont("Arial", 22, QFont::Bold); }

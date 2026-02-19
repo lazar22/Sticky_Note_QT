@@ -6,6 +6,7 @@
 
 #include "shared.h"
 #include "note_window/note_window.h"
+#include "menage_window/menage_window.h"
 #include "save_handler/save_handler.h"
 
 #include <QTimer>
@@ -32,9 +33,11 @@ sticky_note::MainWindow::MainWindow(QWidget* parent)
 
     auto* restore_action = new QAction("Restore", this);
     auto* close_all_action = new QAction("Close All Notes", this);
+    auto* manage_action = new QAction("Manage Notes", this);
     auto* quit_action = new QAction("Quit", this);
 
     tray_menu->addAction(create_action);
+    tray_menu->addAction(manage_action);
     tray_menu->addSeparator();
     tray_menu->addAction(close_all_action);
     tray_menu->addAction(restore_action);
@@ -54,8 +57,18 @@ sticky_note::MainWindow::MainWindow(QWidget* parent)
             });
 
     create_btn = new QPushButton(this);
+    manage_btn = new QPushButton(this);
 
     connect(create_btn, &QPushButton::clicked, create_action, &QAction::trigger);
+    auto open_manage_window = [this]()
+    {
+        auto* manage_window = new MenageWindow();
+        manage_window->init(menage_window::WIDTH, menage_window::HEIGHT, menage_window::TITLE);
+        manage_window->show(false);
+    };
+
+    connect(manage_btn, &QPushButton::clicked, this, open_manage_window);
+    connect(manage_action, &QAction::triggered, this, open_manage_window);
     create_action->setShortcut(QKeySequence::New);
 
     connect(restore_action, &QAction::triggered, this, &MainWindow::restoreFromTray);
@@ -77,6 +90,7 @@ sticky_note::MainWindow::MainWindow(QWidget* parent)
 
     layout->addStretch();
     layout->addWidget(create_btn, 0, Qt::AlignCenter);
+    layout->addWidget(manage_btn, 0, Qt::AlignCenter);
     layout->addStretch();
 
     setLayout(layout);
@@ -104,6 +118,11 @@ void sticky_note::MainWindow::init(const int _w, const int _h, const std::string
     create_btn->setFixedSize(width() - 2 * WINDOW_MARGIN, (height() * 0.05) * WINDOW_MARGIN);
     create_btn->setCursor(Qt::PointingHandCursor);
     create_btn->setStyleSheet("background: #fff6a8;");
+
+    manage_btn->setText("Manage Notes");
+    manage_btn->setFixedSize(width() - 2 * WINDOW_MARGIN, (height() * 0.05) * WINDOW_MARGIN);
+    manage_btn->setCursor(Qt::PointingHandCursor);
+    manage_btn->setStyleSheet("background: #fff6a8;");
 }
 
 void sticky_note::MainWindow::set_title(const std::string _title)
