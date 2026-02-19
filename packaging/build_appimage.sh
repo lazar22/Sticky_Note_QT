@@ -76,10 +76,33 @@ export APPIMAGE_EXTRACT_AND_RUN=1
   --plugin qt
 
 # 5) AppRun entry point (required by AppImage spec)
-# Many tools generate it, but ensure it exists.
-if [ ! -e "$APPDIR/AppRun" ]; then
-  ln -s "usr/bin/$APP" "$APPDIR/AppRun"
+# Instead of a simple symlink, we use a wrapper that detaches from the terminal
+# to behave like a "real application" (doesn't exit when terminal closes).
+rm -f "$APPDIR/AppRun"
+cat > "$APPDIR/AppRun" << 'EOF'
+#!/bin/sh
+# Get the directory where this script is located
+HERE=$(dirname "$(readlink -f "${0}")")
+
+# If started from a terminal, and not already detached, re-run detached
+if [ -t 0 ] && [ "$STAY_OPEN_DETACHED" != "true" ]; then
+    export STAY_OPEN_DETACHED=true
+    # setsid runs the program in a new session, nohup ignores SIGHUP
+    # We redirect output to /dev/null to avoid terminal pollution
+    setsid nohup "$0" "$@" >/dev/null 2>&1 &
+    exit 0
 fi
+
+# Set up environment for the bundled app
+export LD_LIBRARY_PATH="$HERE/usr/lib:$LD_LIBRARY_PATH"
+export QT_PLUGIN_PATH="$HERE/usr/plugins"
+export QML2_IMPORT_PATH="$HERE/usr/qml"
+export XDG_DATA_DIRS="$HERE/usr/share:$XDG_DATA_DIRS"
+
+# Execute the actual binary
+exec "$HERE/usr/bin/sticky_note" "$@"
+EOF
+chmod +x "$APPDIR/AppRun"
 
 # 6) Build the AppImage from AppDir
 mkdir -p "$DISTDIR"
