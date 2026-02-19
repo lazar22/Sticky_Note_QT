@@ -1,22 +1,36 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Folder where this script lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Project root = parent of packaging/  (adjust if your layout differs)
 ROOT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 APP=sticky_note
-BUILD_DIR="$ROOT_DIR/cmake-build-release"
+APPDIR="AppDir"
+BUILD_DIR="$ROOT_DIR/cmake-build-release"   # <-- CLion default
 DISTDIR="$ROOT_DIR/dist"
 
-# Output AppDir name (you used this in the zip step)
-APPDIR="$ROOT_DIR/StickyNoteApp"
+LINUXDEPLOY="./tools/linuxdeploy-x86_64.AppImage"
+PLUGIN_QT="./tools/linuxdeploy-plugin-qt-x86_64.AppImage"
+APPIMAGETOOL="./tools/appimagetool-x86_64.AppImage"
 
-LINUXDEPLOY="$ROOT_DIR/tools/linuxdeploy-x86_64.AppImage"
-PLUGIN_QT="$ROOT_DIR/tools/linuxdeploy-plugin-qt-x86_64.AppImage"
-APPIMAGETOOL="$ROOT_DIR/tools/appimagetool-x86_64.AppImage"
+# 1) Setup environment
+cd "$ROOT_DIR"
+mkdir -p tools
 
-mkdir -p "$ROOT_DIR/tools"
+# 1.5) Build the latest release binary to avoid packaging stale executables
+# Re-configure (idempotent) and build the target in Release mode
+if [ -d "$BUILD_DIR" ]; then
+  cmake -S "$ROOT_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
+else
+  mkdir -p "$BUILD_DIR"
+  cmake -S "$ROOT_DIR" -B "$BUILD_DIR" -DCMAKE_BUILD_TYPE=Release
+fi
+cmake --build "$BUILD_DIR" --target "$APP" -j"$(nproc)"
 
+# Function to download tool if missing
 download_tool() {
   local url=$1
   local output=$2
@@ -27,27 +41,31 @@ download_tool() {
   fi
 }
 
-# Prefer pinning versions in the future; continuous works but can change.
 download_tool "https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage" "$LINUXDEPLOY"
 download_tool "https://github.com/linuxdeploy/linuxdeploy-plugin-qt/releases/download/continuous/linuxdeploy-plugin-qt-x86_64.AppImage" "$PLUGIN_QT"
 download_tool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage" "$APPIMAGETOOL"
 
-# Clean AppDir
+# 2) Clean AppDir
+APPDIR="$ROOT_DIR/StickyNoteApp"
 rm -rf "$APPDIR"
 mkdir -p "$APPDIR/usr/bin"
 mkdir -p "$APPDIR/usr/share/applications"
 mkdir -p "$APPDIR/usr/share/icons/hicolor/256x256/apps"
 
-# Copy your binary + desktop + icon
+# 3) Copy your binary + desktop + icon
 cp "$BUILD_DIR/$APP" "$APPDIR/usr/bin/"
 cp "$ROOT_DIR/sticky_note.desktop" "$APPDIR/usr/share/applications/"
 cp "$ROOT_DIR/icons/note_icon.png" "$APPDIR/usr/share/icons/hicolor/256x256/apps/sticky_note.png"
 
-# Bundle Qt deps
-export QML_SOURCES_PATHS=""
+# Bundle Qt dependencies into the AppDir
+# linuxdeploy uses plugins; the Qt plugin bundles Qt libs/plugins/resources (Qt6 supported).
+export QML_SOURCES_PATHS=""   # set this if you use QML; can leave empty for Widgets-only
 export LINUXDEPLOY_PLUGINS="qt"
 export LINUXDEPLOY_PLUGIN_QT_PATH="$PLUGIN_QT"
+# Force linuxdeploy-plugin-qt to bundle everything it finds
 export EXTRA_QT_PLUGINS="platforms,xcbglintegrations,platformthemes"
+
+# Make sure tools can run (some environments need this for AppImages)
 export APPIMAGE_EXTRACT_AND_RUN=1
 
 "$LINUXDEPLOY" \
@@ -57,34 +75,14 @@ export APPIMAGE_EXTRACT_AND_RUN=1
   -i "$ROOT_DIR/icons/note_icon.png" \
   --plugin qt
 
-# Create a real AppRun wrapper (so running AppDir directly works too)
-cat > "$APPDIR/AppRun" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-HERE="$(cd "$(dirname "$0")" && pwd)"
-
-# Prefer bundled libs (Qt, stdc++, etc.) inside the AppDir.
-export LD_LIBRARY_PATH="$HERE/usr/lib:$HERE/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
-
-# Qt plugin + QML paths (safe even if not used)
-export QT_PLUGIN_PATH="$HERE/usr/plugins"
-export QML2_IMPORT_PATH="$HERE/usr/qml"
-
-# Ensure desktop files/icons can be found
-export XDG_DATA_DIRS="$HERE/usr/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
-
-exec "$HERE/usr/bin/sticky_note" "$@"
-EOF
-chmod +x "$APPDIR/AppRun"
-
-# Sanity check: make sure Qt got bundled (otherwise runtime will use system Qt)
-if [ ! -f "$APPDIR/usr/lib/libQt6Core.so.6" ] && [ ! -f "$APPDIR/usr/lib/x86_64-linux-gnu/libQt6Core.so.6" ]; then
-  echo "ERROR: Qt6Core was not bundled into AppDir. linuxdeploy-plugin-qt likely didn't run correctly."
-  exit 1
+# 5) AppRun entry point (required by AppImage spec)
+# Many tools generate it, but ensure it exists.
+if [ ! -e "$APPDIR/AppRun" ]; then
+  ln -s "usr/bin/$APP" "$APPDIR/AppRun"
 fi
 
-# Finally, create the AppImage
+# 6) Build the AppImage from AppDir
 mkdir -p "$DISTDIR"
-"$APPIMAGETOOL" "$APPDIR" "$DISTDIR/Sticky_Note-x86_64.AppImage"
+ARCH=x86_64 "$APPIMAGETOOL" "$APPDIR" "$DISTDIR/Sticky_Note-x86_64.AppImage"
 
-echo "AppImage created at $DISTDIR/Sticky_Note-x86_64.AppImage"
+echo "Done: $DISTDIR/Sticky_Note-x86_64.AppImage"
