@@ -72,8 +72,9 @@ jobs:
       - name: Create Zip archive
         if: steps.tagcheck.outputs.exists == 'false'
         run: |
-          cd dist
-          zip Sticky_Note-x86_64.zip Sticky_Note-x86_64.AppImage
+          # The 'StickyNoteApp' directory is created by build_appimage.sh and contains AppRun and all dependencies
+          # Zip the directory structure so it's a portable folder
+          zip -r dist/StickyNoteApp.zip StickyNoteApp/
 
       - name: Create tag
         if: steps.tagcheck.outputs.exists == 'false'
@@ -89,5 +90,5 @@ jobs:
         with:
           tag: ${{ steps.ver.outputs.tag }}
           name: ${{ steps.ver.outputs.tag }}
-          artifacts: "dist/Sticky_Note-x86_64.AppImage,dist/Sticky_Note-x86_64.zip"
+          artifacts: "dist/Sticky_Note-x86_64.AppImage,dist/StickyNoteApp.zip"
           generateReleaseNotes: true
