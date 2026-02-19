@@ -54,7 +54,7 @@ jobs:
         if: steps.tagcheck.outputs.exists == 'false'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libgl1-mesa-dev libfuse2
+          sudo apt-get install -y build-essential libgl1-mesa-dev libfuse2 libxcb-cursor0
 
       - name: Configure and build
         if: steps.tagcheck.outputs.exists == 'false'
