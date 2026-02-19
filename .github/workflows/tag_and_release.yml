@@ -9,7 +9,8 @@ permissions:
 
 jobs:
   tag_release:
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-20.04
+
     steps:
       - name: Checkout (with tags)
         uses: actions/checkout@v4
@@ -40,7 +41,6 @@ jobs:
             echo "exists=false" >> "$GITHUB_OUTPUT"
           fi
 
-
       - name: Install Qt
         if: steps.tagcheck.outputs.exists == 'false'
         uses: jurplel/install-qt-action@v3
@@ -62,21 +62,33 @@ jobs:
             libxcb-render-util0 libxcb-keysyms1 libxcb-shape0 libxcb-xfixes0 \
             libxcb-util1 libxcb-randr0 libxcb-xinerama0
 
-      - name: Export Qt env for linuxdeploy-plugin-qt
+      - name: Export Qt env (fix QTDIR)
         if: steps.tagcheck.outputs.exists == 'false'
+        shell: bash
         run: |
-          echo "QTDIR=${Qt6_DIR}" >> $GITHUB_ENV
-          echo "PATH=${Qt6_DIR}/bin:$PATH" >> $GITHUB_ENV
-          echo "QMAKE=${Qt6_DIR}/bin/qmake" >> $GITHUB_ENV
-          echo "APPIMAGE_EXTRACT_AND_RUN=1" >> $GITHUB_ENV
+          # install-qt-action often sets Qt6_DIR to .../gcc_64/lib/cmake/Qt6
+          # We want the Qt root: .../gcc_64
+          if [ -z "${Qt6_DIR:-}" ]; then
+            echo "Qt6_DIR is empty; install-qt-action did not expose it." >&2
+            exit 1
+          fi
+
+          QTDIR="$(dirname "$(dirname "$Qt6_DIR")")"
+          echo "QTDIR=$QTDIR" >> "$GITHUB_ENV"
+          echo "PATH=$QTDIR/bin:$PATH" >> "$GITHUB_ENV"
+          echo "QMAKE=$QTDIR/bin/qmake" >> "$GITHUB_ENV"
+          echo "APPIMAGE_EXTRACT_AND_RUN=1" >> "$GITHUB_ENV"
+
+          echo "Qt6_DIR=$Qt6_DIR"
+          echo "QTDIR=$QTDIR"
+          ls -la "$QTDIR/bin" | head
 
       - name: Configure and build
         if: steps.tagcheck.outputs.exists == 'false'
         env:
           CMAKE_PREFIX_PATH: "${{ env.QTDIR }}"
         run: |
-          mkdir -p cmake-build-release
-          cmake -B cmake-build-release -DCMAKE_BUILD_TYPE=Release
+          cmake -S . -B cmake-build-release -G Ninja -DCMAKE_BUILD_TYPE=Release
           cmake --build cmake-build-release --target sticky_note
 
       - name: Generate AppImage
@@ -85,11 +97,10 @@ jobs:
           chmod +x packaging/build_appimage.sh
           ./packaging/build_appimage.sh
 
-      - name: Create Zip archive
+      - name: Create portable folder zip (optional)
         if: steps.tagcheck.outputs.exists == 'false'
         run: |
-          # The 'StickyNoteApp' directory is created by build_appimage.sh and contains AppRun and all dependencies
-          # Zip the directory structure so it's a portable folder
+          mkdir -p dist
           zip -r dist/StickyNoteApp.zip StickyNoteApp/
 
       - name: Create tag
@@ -105,6 +116,4 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.ver.outputs.tag }}
-          name: ${{ steps.ver.outputs.tag }}
-          artifacts: "dist/Sticky_Note-x86_64.AppImage,dist/StickyNoteApp.zip"
-          generateReleaseNotes: true
+          name: ${{ steps.ver.outputs.tag
