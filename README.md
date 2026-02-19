@@ -1,4 +1,4 @@
-# Sticky Note (Qt6)
+# Sticky Note (Qt6) [![Tag and Release](https://github.com/lazar22/Sticky_Note_QT/actions/workflows/tag_and_release.yml/badge.svg)](https://github.com/lazar22/Sticky_Note_QT/actions/workflows/tag_and_release.yml)
 
 A lightweight, feature-rich sticky note application for Linux (Ubuntu) built with C++23 and the Qt6 framework.
 
