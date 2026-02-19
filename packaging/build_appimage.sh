@@ -67,8 +67,20 @@ export APPIMAGE_EXTRACT_AND_RUN=1
 
 # 5) AppRun entry point (required by AppImage spec)
 # Many tools generate it, but ensure it exists.
-if [ ! -e "$APPDIR/AppRun" ]; then
-  ln -s "usr/bin/$APP" "$APPDIR/AppRun"
+# If linuxdeploy didn't create a real AppRun (a shell script that sets up LD_LIBRARY_PATH),
+# we might need to manually create one to ensure the bundled libs in usr/lib are used.
+if [ -L "$APPDIR/AppRun" ] || [ ! -f "$APPDIR/AppRun" ]; then
+  echo "Creating/Replacing AppRun with a wrapper to ensure bundled libraries are used..."
+  rm -f "$APPDIR/AppRun"
+  cat > "$APPDIR/AppRun" <<EOF
+#!/bin/sh
+HERE="\$(dirname "\$(readlink -f "\${0}")")"
+export LD_LIBRARY_PATH="\${HERE}/usr/lib:\${LD_LIBRARY_PATH}"
+export QT_PLUGIN_PATH="\${HERE}/usr/plugins"
+export QML2_IMPORT_PATH="\${HERE}/usr/qml"
+exec "\${HERE}/usr/bin/$APP" "\$@"
+EOF
+  chmod +x "$APPDIR/AppRun"
 fi
 
 # 6) Build the AppImage from AppDir
