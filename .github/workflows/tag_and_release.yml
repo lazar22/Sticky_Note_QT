@@ -116,4 +116,6 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.ver.outputs.tag }}
-          name: ${{ steps.ver.outputs.tag
+          name: ${{ steps.ver.outputs.tag }}
+          artifacts: "dist/StickyNoteApp.zip"
+          token: ${{ secrets.GITHUB_TOKEN }}
