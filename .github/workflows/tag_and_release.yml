@@ -50,7 +50,6 @@ jobs:
           target: 'desktop'
           arch: 'gcc_64'
           cache: true
-          modules: 'qtbase qttools'
 
       - name: Install dependencies
         if: steps.tagcheck.outputs.exists == 'false'
