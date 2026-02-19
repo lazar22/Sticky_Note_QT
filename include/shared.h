@@ -5,8 +5,10 @@
 #ifndef SHARED_H
 #define SHARED_H
 
+#include <QKeySequence>
 #include <string>
 #include <QFont>
+#include <QIcon>
 
 namespace sticky_note
 {
@@ -28,8 +30,29 @@ namespace sticky_note
 
     namespace note_fonts
     {
-        const QFont TITLE_FONT("Arial", 22, QFont::Bold);
-        const QFont REGULAR_FONT("Arial", 16, QFont::Bold);
+        inline QFont TITLE_FONT() { return QFont("Arial", 22, QFont::Bold); }
+        inline QFont REGULAR_FONT() { return QFont("Arial", 16, QFont::Bold); }
+    }
+
+    namespace note_icons
+    {
+        inline QIcon PEN_ICON() { return QIcon(":/icons/pen.png"); }
+        inline QIcon PEN_ACTIVE_ICON() { return QIcon(":/icons/pen_active.png"); }
+
+        inline QIcon EXIT_ICON() { return QIcon(":/icons/exit.png"); }
+        inline QIcon WHEEL_ICON() { return QIcon(":/icons/wheel.png"); }
+
+        inline QIcon PIN_ICON() { return QIcon(":/icons/pin.png"); }
+        inline QIcon PIN_ACTIVE_ICON() { return QIcon(":/icons/pin_active.png"); }
+    }
+
+    namespace note_shortcuts
+    {
+        const QKeySequence EDIT_NOTE_SHORTCUT = QKeySequence("Ctrl+E");
+        const QKeySequence QUIT_NOTE_SHORTCUT = QKeySequence("Ctrl+Q");
+        const QKeySequence COLOR_NOTE_SHORTCUT = QKeySequence("Ctrl+C");
+        const QKeySequence PIN_NOTE_SHORTCUT = QKeySequence("Ctrl+P");
+        const QKeySequence SAVE_NOTE_SHORTCUT = QKeySequence("Ctrl+S");
     }
 }
 

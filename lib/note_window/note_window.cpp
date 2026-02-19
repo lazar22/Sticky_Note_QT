@@ -2,20 +2,19 @@
 // Created by roki on 2026-02-16.
 //
 
-#include "note_window.h"
-#include "note_action/note_action.h"
-#include "shared.h"
 #include "save_handler/save_handler.h"
+#include "note_action/note_action.h"
+#include "note_window.h"
+#include "shared.h"
 
-#include <QDebug> // Testing
-
-#include <QScreen>
 #include <QGuiApplication>
-#include <QDir>
-#include <QFileInfo>
 #include <QResizeEvent>
+#include <QColorDialog>
 #include <QMouseEvent>
+#include <QFileInfo>
 #include <QPainter>
+#include <QScreen>
+#include <QDir>
 
 static constexpr int WINDOW_MARGIN = 8;
 static constexpr int RESIZE_HANDLE_SIZE = 10;
@@ -24,6 +23,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     : QWidget(parent), id(QUuid::createUuid()), current_color("#fff6a8")
 {
     setObjectName("NoteWindow");
+
     quit_action = new QAction("Quit", this);
     edit_action = new QAction("Edit", this);
     create_action = new QAction("New", this);
@@ -67,10 +67,10 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     color_btn->setBaseIconSize(base_icon_size);
     pin_btn->setBaseIconSize(base_icon_size);
 
-    edit_btn->setIcon(QIcon(":/icons/pen.png"));
-    quit_btn->setIcon(QIcon(":/icons/exit.png"));
-    color_btn->setIcon(QIcon(":/icons/wheel.png"));
-    pin_btn->setIcon(QIcon(":/icons/pin.png"));
+    edit_btn->setIcon(sticky_note::note_icons::PEN_ICON());
+    quit_btn->setIcon(sticky_note::note_icons::EXIT_ICON());
+    color_btn->setIcon(sticky_note::note_icons::WHEEL_ICON());
+    pin_btn->setIcon(sticky_note::note_icons::PIN_ICON());
 
     edit_btn->setFlat(true);
     quit_btn->setFlat(true);
@@ -79,10 +79,10 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     quit_btn->setHoverBackground(QColor("#e74c3c"), circle_size / 2);
 
-    edit_btn->setToolTip("Edit (Ctrl+E)");
-    quit_btn->setToolTip("Quit (Ctrl+W)");
-    color_btn->setToolTip("Color (Ctrl+C)");
-    pin_btn->setToolTip("Pin (Ctrl+P)");
+    edit_btn->setToolTip(QString("Edit (%1)").arg(sticky_note::note_shortcuts::EDIT_NOTE_SHORTCUT.toString()));
+    quit_btn->setToolTip(QString("Quit (%1)").arg(sticky_note::note_shortcuts::QUIT_NOTE_SHORTCUT.toString()));
+    color_btn->setToolTip(QString("Color (%1)").arg(sticky_note::note_shortcuts::COLOR_NOTE_SHORTCUT.toString()));
+    pin_btn->setToolTip(QString("Pin (%1)").arg(sticky_note::note_shortcuts::PIN_NOTE_SHORTCUT.toString()));
 
     edit_btn->setCursor(Qt::PointingHandCursor);
     quit_btn->setCursor(Qt::PointingHandCursor);
@@ -90,10 +90,14 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     pin_btn->setCursor(Qt::PointingHandCursor);
 
     connect(quit_btn, &QPushButton::clicked, quit_action, &QAction::trigger);
-    quit_action->setShortcut(QKeySequence::Close); // Ctrl + W
+    quit_action->setShortcut(sticky_note::note_shortcuts::QUIT_NOTE_SHORTCUT);
 
     connect(edit_btn, &QPushButton::clicked, edit_action, &QAction::trigger);
-    edit_action->setShortcut(QKeySequence("Ctrl+E"));
+    edit_action->setShortcut(sticky_note::note_shortcuts::EDIT_NOTE_SHORTCUT);
+
+    save_action->setShortcut(sticky_note::note_shortcuts::SAVE_NOTE_SHORTCUT);
+    color_action->setShortcut(sticky_note::note_shortcuts::COLOR_NOTE_SHORTCUT);
+    pin_action->setShortcut(sticky_note::note_shortcuts::PIN_NOTE_SHORTCUT);
 
     connect(color_btn, &QPushButton::clicked, this, [this]()
     {
@@ -149,15 +153,15 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     {
         color_btn->click();
     });
-    color_action->setShortcut(QKeySequence("Ctrl+C"));
+    color_action->setShortcut(sticky_note::note_shortcuts::COLOR_NOTE_SHORTCUT);
 
     connect(save_action, &QAction::triggered, this, &NoteWindow::save);
-    save_action->setShortcut(QKeySequence("Ctrl+S"));
+    save_action->setShortcut(sticky_note::note_shortcuts::SAVE_NOTE_SHORTCUT);
 
     auto pin_func = [this]()
     {
         is_pinned = !is_pinned;
-        pin_btn->setIcon(is_pinned ? QIcon(":/icons/pin_active.png") : QIcon(":/icons/pin.png"));
+        pin_btn->setIcon(is_pinned ? sticky_note::note_icons::PIN_ACTIVE_ICON() : sticky_note::note_icons::PIN_ICON());
         show(true);
         SaveHandler::save_to_json({
             id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned
@@ -166,29 +170,27 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     connect(pin_btn, &QPushButton::clicked, this, pin_func);
     connect(pin_action, &QAction::triggered, this, pin_func);
-    pin_action->setShortcut(QKeySequence("Ctrl+P"));
+    pin_action->setShortcut(sticky_note::note_shortcuts::PIN_NOTE_SHORTCUT);
 
     create_action->setShortcut(QKeySequence::New); // Ctrl + N
 
-    title_label->setFont(note_fonts::TITLE_FONT);
+    title_label->setFont(note_fonts::TITLE_FONT());
     title_label->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     title_label->setStyleSheet("background: transparent; border: none;");
 
-    title_edit->setFont(note_fonts::TITLE_FONT);
+    title_edit->setFont(note_fonts::TITLE_FONT());
     title_edit->setAlignment(Qt::AlignLeft | Qt::AlignTop);
     title_edit->setStyleSheet("background: transparent; border: none;");
     title_edit->hide();
 
-    note_label->setFont(note_fonts::REGULAR_FONT);
+    note_label->setFont(note_fonts::REGULAR_FONT());
     note_label->setStyleSheet("background: transparent; border: none;");
 
-    note_edit->setFont(note_fonts::REGULAR_FONT);
+    note_edit->setFont(note_fonts::REGULAR_FONT());
     note_edit->setStyleSheet("background: transparent; border: none;");
     note_edit->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     note_edit->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     note_edit->hide();
-
-    connect(note_edit, &QTextEdit::textChanged, this, &NoteWindow::update_height);
 
     quit_btn->setEnabled(false);
     edit_btn->setEnabled(false);
@@ -255,7 +257,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
             note_edit->show();
 
             title_edit->setFocus();
-            edit_btn->setIcon(QIcon(":/icons/pen_active.png"));
+            edit_btn->setIcon(sticky_note::note_icons::PEN_ACTIVE_ICON());
         }
         else
         {
@@ -273,20 +275,23 @@ sticky_note::NoteWindow::NoteWindow(QUuid _id, QPoint _pos, QColor _color, QStri
     id = _id;
     current_color = _color;
     is_pinned = _is_pinned;
+
     move(_pos);
-    set_title(_title.toStdString());
-    edit(_text.toStdString());
+
+    NoteWindow::set_title(_title.toStdString());
+    NoteWindow::edit(_text.toStdString());
 
     apply_styles();
     if (is_pinned)
     {
-        pin_btn->setIcon(QIcon(":/icons/pin_active.png"));
+        pin_btn->setIcon(sticky_note::note_icons::PIN_ACTIVE_ICON());
     }
 }
 
 void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string _title)
 {
     QScreen* screen = QGuiApplication::primaryScreen();
+
     if (screen)
     {
         const QRect screenGeometry = screen->geometry();
@@ -335,7 +340,6 @@ void sticky_note::NoteWindow::edit(const std::string _note)
 {
     note_label->setMarkdown(to_view_markdown(QString::fromStdString(_note)));
     note_edit->setPlainText(QString::fromStdString(_note));
-    update_height();
 }
 
 void sticky_note::NoteWindow::save()
@@ -349,10 +353,9 @@ void sticky_note::NoteWindow::save()
     note_edit->hide();
     note_label->show();
 
-    edit_btn->setIcon(QIcon(":/icons/pen.png"));
+    edit_btn->setIcon(sticky_note::note_icons::PEN_ICON());
 
     setWindowTitle(title_label->text());
-    update_height();
     SaveHandler::save_to_json({
         id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
     });
@@ -421,27 +424,27 @@ void sticky_note::NoteWindow::mouseMoveEvent(QMouseEvent* event)
 
         if (resize_edges & Qt::LeftEdge)
         {
-            const int new_width = initial_geometry.width() - delta.x();
-            if (new_width >= minimumWidth())
-            {
-                new_geometry.setLeft(initial_geometry.left() + delta.x());
-            }
+            const int target_width = std::max(minimumWidth(), initial_geometry.width() - delta.x());
+            const int new_left = initial_geometry.right() - target_width + 1;
+            new_geometry.setLeft(new_left);
         }
         if (resize_edges & Qt::RightEdge)
         {
-            new_geometry.setRight(initial_geometry.right() + delta.x());
+            const int target_width = std::max(minimumWidth(), initial_geometry.width() + delta.x());
+            const int new_right = initial_geometry.left() + target_width - 1;
+            new_geometry.setRight(new_right);
         }
         if (resize_edges & Qt::TopEdge)
         {
-            const int new_height = initial_geometry.height() - delta.y();
-            if (new_height >= minimumHeight())
-            {
-                new_geometry.setTop(initial_geometry.top() + delta.y());
-            }
+            const int target_height = std::max(minimumHeight(), initial_geometry.height() - delta.y());
+            const int new_top = initial_geometry.bottom() - target_height + 1;
+            new_geometry.setTop(new_top);
         }
         if (resize_edges & Qt::BottomEdge)
         {
-            new_geometry.setBottom(initial_geometry.bottom() + delta.y());
+            const int target_height = std::max(minimumHeight(), initial_geometry.height() + delta.y());
+            const int new_bottom = initial_geometry.top() + target_height - 1;
+            new_geometry.setBottom(new_bottom);
         }
 
         setGeometry(new_geometry);
@@ -457,8 +460,8 @@ void sticky_note::NoteWindow::mouseMoveEvent(QMouseEvent* event)
             bool over_checkbox = false;
             if (note_label->isVisible() && note_label->geometry().contains(event->pos()))
             {
-                QPoint labelPos = note_label->mapFromParent(event->pos());
-                QTextCursor cursor = note_label->cursorForPosition(labelPos);
+                const QPoint labelPos = note_label->mapFromParent(event->pos());
+                const QTextCursor cursor = note_label->cursorForPosition(labelPos);
                 QRect charRect = note_label->cursorRect(cursor);
 
                 // Check if the cursor is reasonably close to the character position
@@ -532,7 +535,7 @@ void sticky_note::NoteWindow::mousePressEvent(QMouseEvent* event)
             const int center_x = charRect.x() + charRect.width() / 2;
             const int dx = std::abs(labelPos.x() - center_x);
 
-            if (dx <= 20)
+            if (dx <= checkbox_check_area)
             {
                 QTextCursor selectCursor = cursor;
                 selectCursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor);
@@ -584,7 +587,6 @@ void sticky_note::NoteWindow::mouseReleaseEvent(QMouseEvent* event)
 
 void sticky_note::NoteWindow::resizeEvent(QResizeEvent* event)
 {
-    update_height();
     QWidget::resizeEvent(event);
 }
 
