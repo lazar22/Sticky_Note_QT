@@ -45,21 +45,38 @@ jobs:
         if: steps.tagcheck.outputs.exists == 'false'
         uses: jurplel/install-qt-action@v3
         with:
-          version: '6.5.*'
+          version: '6.5.3'
           host: 'linux'
           target: 'desktop'
           arch: 'gcc_64'
+          cache: true
+          modules: 'qtbase qttools'
 
       - name: Install dependencies
         if: steps.tagcheck.outputs.exists == 'false'
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential libgl1-mesa-dev libfuse2 libxcb-cursor0
+          sudo apt-get install -y \
+            build-essential cmake ninja-build \
+            libgl1-mesa-dev libfuse2 \
+            libxcb-cursor0 libxkbcommon-x11-0 libxcb-icccm4 libxcb-image0 \
+            libxcb-render-util0 libxcb-keysyms1 libxcb-shape0 libxcb-xfixes0 \
+            libxcb-util1 libxcb-randr0 libxcb-xinerama0
+
+      - name: Export Qt env for linuxdeploy-plugin-qt
+        if: steps.tagcheck.outputs.exists == 'false'
+        run: |
+          echo "QTDIR=${Qt6_DIR}" >> $GITHUB_ENV
+          echo "PATH=${Qt6_DIR}/bin:$PATH" >> $GITHUB_ENV
+          echo "QMAKE=${Qt6_DIR}/bin/qmake" >> $GITHUB_ENV
+          echo "APPIMAGE_EXTRACT_AND_RUN=1" >> $GITHUB_ENV
 
       - name: Configure and build
         if: steps.tagcheck.outputs.exists == 'false'
+        env:
+          CMAKE_PREFIX_PATH: "${{ env.QTDIR }}"
         run: |
-          mkdir cmake-build-release
+          mkdir -p cmake-build-release
           cmake -B cmake-build-release -DCMAKE_BUILD_TYPE=Release
           cmake --build cmake-build-release --target sticky_note
 
