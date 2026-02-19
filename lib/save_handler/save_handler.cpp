@@ -12,6 +12,8 @@ namespace sticky_note
         note_object["id"] = data.id.toString();
         note_object["x"] = data.pos.x();
         note_object["y"] = data.pos.y();
+        note_object["w"] = data.size.width();
+        note_object["h"] = data.size.height();
         note_object["color"] = data.color.name();
         note_object["title"] = data.title;
         note_object["text"] = data.text;
@@ -67,6 +69,7 @@ namespace sticky_note
                     NoteData note;
                     note.id = QUuid::fromString(obj["id"].toString());
                     note.pos = QPoint(obj["x"].toInt(), obj["y"].toInt());
+                    note.size = QSize(obj["w"].toInt(), obj["h"].toInt());
                     note.color = QColor(obj["color"].toString());
                     note.title = obj["title"].toString();
                     note.text = obj["text"].toString();

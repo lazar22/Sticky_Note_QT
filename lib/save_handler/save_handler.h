@@ -12,6 +12,7 @@
 #include <QFile>
 #include <QUuid>
 #include <QPoint>
+#include <QSize>
 #include <QColor>
 #include <QStandardPaths>
 
@@ -21,6 +22,7 @@ namespace sticky_note
     {
         QUuid id;
         QPoint pos;
+        QSize size;
         QColor color;
         QString title;
         QString text;

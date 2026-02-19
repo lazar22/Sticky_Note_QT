@@ -80,7 +80,7 @@ namespace sticky_note
     public:
         explicit NoteWindow(QWidget* parent = nullptr);
 
-        explicit NoteWindow(QUuid _id, QPoint _pos, QColor _color, QString _title, QString _text,
+        explicit NoteWindow(QUuid _id, QPoint _pos, QSize _size, QColor _color, QString _title, QString _text,
                             bool _is_pinned = false, QWidget* parent = nullptr);
 
         void init(int _w, int _h, std::string _title) override;

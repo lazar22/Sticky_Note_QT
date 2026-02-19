@@ -164,7 +164,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
         pin_btn->setIcon(is_pinned ? sticky_note::note_icons::PIN_ACTIVE_ICON() : sticky_note::note_icons::PIN_ICON());
         show(true);
         SaveHandler::save_to_json({
-            id, pos(), current_color, title_label->text(), note_label->toPlainText(), is_pinned
+            id, pos(), size(), current_color, title_label->text(), note_label->toPlainText(), is_pinned
         });
     };
 
@@ -268,7 +268,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     setMouseTracking(true);
 }
 
-sticky_note::NoteWindow::NoteWindow(QUuid _id, QPoint _pos, QColor _color, QString _title, QString _text,
+sticky_note::NoteWindow::NoteWindow(QUuid _id, QPoint _pos, QSize _size, QColor _color, QString _title, QString _text,
                                     bool _is_pinned, QWidget* parent)
     : NoteWindow(parent)
 {
@@ -277,6 +277,7 @@ sticky_note::NoteWindow::NoteWindow(QUuid _id, QPoint _pos, QColor _color, QStri
     is_pinned = _is_pinned;
 
     move(_pos);
+    resize(_size);
 
     NoteWindow::set_title(_title.toStdString());
     NoteWindow::edit(_text.toStdString());
@@ -297,11 +298,19 @@ void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string
         const QRect screenGeometry = screen->geometry();
         const int width = screenGeometry.width() * 0.15; // 15% of screen width
         const int height = screenGeometry.height() * 0.25; // 25% of screen height
-        resize(width, height);
+        if (size() == QSize(sticky_note::note_window::MIN_WIDTH, sticky_note::note_window::MIN_HEIGHT) || size().
+            isEmpty())
+        {
+            resize(width, height);
+        }
     }
     else
     {
-        resize(_w, _h);
+        if (size() == QSize(sticky_note::note_window::MIN_WIDTH, sticky_note::note_window::MIN_HEIGHT) || size().
+            isEmpty())
+        {
+            resize(_w, _h);
+        }
     }
 
     if (title_label->text().isEmpty() || title_label->text() == sticky_note::note_window::TITLE)
@@ -309,7 +318,7 @@ void sticky_note::NoteWindow::init(const int _w, const int _h, const std::string
         set_title(_title);
     }
     SaveHandler::save_to_json({
-        id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
+        id, pos(), size(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
     });
 }
 
@@ -357,7 +366,7 @@ void sticky_note::NoteWindow::save()
 
     setWindowTitle(title_label->text());
     SaveHandler::save_to_json({
-        id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
+        id, pos(), size(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
     });
 }
 
@@ -366,7 +375,7 @@ void sticky_note::NoteWindow::change_color(const QColor& color)
     current_color = color;
     apply_styles();
     SaveHandler::save_to_json({
-        id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
+        id, pos(), size(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
     });
 }
 
@@ -549,7 +558,8 @@ void sticky_note::NoteWindow::mousePressEvent(QMouseEvent* event)
                     // Update note_edit and save
                     note_edit->setPlainText(from_view_markdown(note_label->toMarkdown()));
                     SaveHandler::save_to_json({
-                        id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()),
+                        id, pos(), size(), current_color, title_label->text(),
+                        from_view_markdown(note_label->toMarkdown()),
                         is_pinned
                     });
 
@@ -576,7 +586,8 @@ void sticky_note::NoteWindow::mouseReleaseEvent(QMouseEvent* event)
             is_resizing = false;
             setCursor(Qt::OpenHandCursor);
             SaveHandler::save_to_json({
-                id, pos(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()), is_pinned
+                id, pos(), size(), current_color, title_label->text(), from_view_markdown(note_label->toMarkdown()),
+                is_pinned
             });
             event->accept();
         }

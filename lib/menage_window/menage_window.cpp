@@ -193,7 +193,8 @@ namespace sticky_note
         {
             SaveHandler::save_to_json(note);
             // Open the note window
-            auto* note_window = new NoteWindow(note.id, note.pos, note.color, note.title, note.text, note.is_pinned);
+            auto* note_window = new NoteWindow(note.id, note.pos, note.size, note.color, note.title, note.text,
+                                               note.is_pinned);
             auto* note_action = new NoteAction(note_window);
             note_action->create_note(note_window);
         }
