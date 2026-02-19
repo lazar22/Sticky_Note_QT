@@ -14,6 +14,7 @@
 #include <QFileInfo>
 #include <QPainter>
 #include <QScreen>
+#include <QFileDialog>
 #include <QDir>
 
 static constexpr int WINDOW_MARGIN = 8;
@@ -46,6 +47,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     quit_btn = new ScalingButton(this);
     color_btn = new ScalingButton(this);
     pin_btn = new ScalingButton(this);
+    download_btn = new ScalingButton(this);
 
     note_label->setFrameStyle(QFrame::NoFrame);
     note_label->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
@@ -60,22 +62,26 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     quit_btn->setFixedSize(circle_size, circle_size);
     color_btn->setFixedSize(circle_size, circle_size);
     pin_btn->setFixedSize(circle_size, circle_size);
+    download_btn->setFixedSize(circle_size, circle_size);
 
     constexpr QSize base_icon_size(24, 24);
     edit_btn->setBaseIconSize(base_icon_size);
     quit_btn->setBaseIconSize(base_icon_size);
     color_btn->setBaseIconSize(base_icon_size);
     pin_btn->setBaseIconSize(base_icon_size);
+    download_btn->setBaseIconSize(base_icon_size);
 
     edit_btn->setIcon(sticky_note::note_icons::PEN_ICON());
     quit_btn->setIcon(sticky_note::note_icons::EXIT_ICON());
     color_btn->setIcon(sticky_note::note_icons::WHEEL_ICON());
     pin_btn->setIcon(sticky_note::note_icons::PIN_ICON());
+    download_btn->setIcon(sticky_note::note_icons::DOWNLOAD_ICON());
 
     edit_btn->setFlat(true);
     quit_btn->setFlat(true);
     color_btn->setFlat(true);
     pin_btn->setFlat(true);
+    download_btn->setFlat(true);
 
     quit_btn->setHoverBackground(QColor("#e74c3c"), circle_size / 2);
 
@@ -83,11 +89,14 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     quit_btn->setToolTip(QString("Quit (%1)").arg(sticky_note::note_shortcuts::QUIT_NOTE_SHORTCUT.toString()));
     color_btn->setToolTip(QString("Color (%1)").arg(sticky_note::note_shortcuts::COLOR_NOTE_SHORTCUT.toString()));
     pin_btn->setToolTip(QString("Pin (%1)").arg(sticky_note::note_shortcuts::PIN_NOTE_SHORTCUT.toString()));
+    download_btn->setToolTip(
+        QString("Download (%1)").arg(sticky_note::note_shortcuts::DOWNLOAD_NOTE_SHORTCUT.toString()));
 
     edit_btn->setCursor(Qt::PointingHandCursor);
     quit_btn->setCursor(Qt::PointingHandCursor);
     color_btn->setCursor(Qt::PointingHandCursor);
     pin_btn->setCursor(Qt::PointingHandCursor);
+    download_btn->setCursor(Qt::PointingHandCursor);
 
     connect(quit_btn, &QPushButton::clicked, quit_action, &QAction::trigger);
     quit_action->setShortcut(sticky_note::note_shortcuts::QUIT_NOTE_SHORTCUT);
@@ -172,6 +181,11 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     connect(pin_action, &QAction::triggered, this, pin_func);
     pin_action->setShortcut(sticky_note::note_shortcuts::PIN_NOTE_SHORTCUT);
 
+    download_action = new QAction("Download", this);
+    connect(download_btn, &QPushButton::clicked, download_action, &QAction::trigger);
+    connect(download_action, &QAction::triggered, this, &NoteWindow::download);
+    download_action->setShortcut(sticky_note::note_shortcuts::DOWNLOAD_NOTE_SHORTCUT);
+
     create_action->setShortcut(QKeySequence::New); // Ctrl + N
 
     title_label->setFont(note_fonts::TITLE_FONT());
@@ -196,6 +210,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     edit_btn->setEnabled(false);
     color_btn->setEnabled(false);
     pin_btn->setEnabled(false);
+    download_btn->setEnabled(false);
 
     layout->setContentsMargins(WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN, WINDOW_MARGIN / 2);
 
@@ -205,6 +220,8 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
     button_layout->addWidget(pin_btn);
     button_layout->addWidget(color_btn);
     button_layout->addWidget(edit_btn);
+    button_layout->addStretch();
+    button_layout->addWidget(download_btn);
 
     text_layout->addWidget(title_label);
     text_layout->addWidget(title_edit);
@@ -214,7 +231,6 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
 
     content_layout->addLayout(text_layout, 1);
     content_layout->addLayout(button_layout);
-    content_layout->setAlignment(button_layout, Qt::AlignTop);
 
     layout->addLayout(content_layout);
 
@@ -370,6 +386,36 @@ void sticky_note::NoteWindow::save()
     });
 }
 
+void sticky_note::NoteWindow::download()
+{
+    QString fileName = QFileDialog::getSaveFileName(this,
+                                                    "Save Note",
+                                                    QDir::homePath() + "/" + title_label->text() + ".json",
+                                                    "JSON Files (*.json)");
+
+    if (fileName.isEmpty())
+        return;
+
+    QJsonObject note_object;
+    note_object["id"] = id.toString();
+    note_object["x"] = pos().x();
+    note_object["y"] = pos().y();
+    note_object["w"] = size().width();
+    note_object["h"] = size().height();
+    note_object["color"] = current_color.name();
+    note_object["title"] = title_label->text();
+    note_object["text"] = from_view_markdown(note_label->toMarkdown());
+    note_object["is_pinned"] = is_pinned;
+
+    QJsonDocument doc(note_object);
+    QFile file(fileName);
+    if (file.open(QIODevice::WriteOnly))
+    {
+        file.write(doc.toJson());
+        file.close();
+    }
+}
+
 void sticky_note::NoteWindow::change_color(const QColor& color)
 {
     current_color = color;
@@ -391,6 +437,7 @@ void sticky_note::NoteWindow::apply_styles()
     if (edit_btn) edit_btn->setHoverBackground(current_color.darker(110), 18);
     if (color_btn) color_btn->setHoverBackground(current_color.darker(110), 18);
     if (pin_btn) pin_btn->setHoverBackground(current_color.darker(110), 18);
+    if (download_btn) download_btn->setHoverBackground(current_color.darker(110), 18);
 }
 
 void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
@@ -399,6 +446,7 @@ void sticky_note::NoteWindow::enterEvent(QEnterEvent* event)
     edit_btn->setEnabled(true);
     color_btn->setEnabled(true);
     pin_btn->setEnabled(true);
+    download_btn->setEnabled(true);
     setCursor(Qt::OpenHandCursor);
     QWidget::enterEvent(event);
 }
@@ -411,6 +459,7 @@ void sticky_note::NoteWindow::leaveEvent(QEvent* event)
         edit_btn->setEnabled(false);
         color_btn->setEnabled(false);
         pin_btn->setEnabled(false);
+        download_btn->setEnabled(false);
         unsetCursor();
     }
     QWidget::leaveEvent(event);

@@ -43,6 +43,7 @@ namespace sticky_note
         QAction* save_action = nullptr;
         QAction* color_action = nullptr;
         QAction* pin_action = nullptr;
+        QAction* download_action = nullptr;
 
         QWidgetAction* drop_down = nullptr; // Dropdown menu action
 
@@ -57,6 +58,7 @@ namespace sticky_note
         ScalingButton* edit_btn = nullptr;
         ScalingButton* color_btn = nullptr;
         ScalingButton* pin_btn = nullptr;
+        ScalingButton* download_btn = nullptr;
         QPushButton* color_pick_btn = nullptr;
 
         // Layouts
@@ -113,6 +115,11 @@ namespace sticky_note
          * @brief Function to save the note content
          */
         void save();
+
+        /**
+         * @brief Function to download the note as JSON
+         */
+        void download();
 
         /**
          * @brief Function to close the window

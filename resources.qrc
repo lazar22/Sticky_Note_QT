@@ -8,5 +8,6 @@
         <file>icons/pin_active.png</file>
         <file>icons/pen_active.png</file>
         <file>icons/end.png</file>
+        <file>icons/download.png</file>
     </qresource>
 </RCC>

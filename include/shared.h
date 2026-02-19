@@ -51,6 +51,8 @@ namespace sticky_note
 
         inline QIcon PIN_ICON() { return QIcon(":/icons/pin.png"); }
         inline QIcon PIN_ACTIVE_ICON() { return QIcon(":/icons/pin_active.png"); }
+
+        inline QIcon DOWNLOAD_ICON() { return QIcon(":/icons/download.png"); }
     }
 
     namespace note_shortcuts
@@ -60,6 +62,7 @@ namespace sticky_note
         const QKeySequence COLOR_NOTE_SHORTCUT = QKeySequence("Ctrl+C");
         const QKeySequence PIN_NOTE_SHORTCUT = QKeySequence("Ctrl+P");
         const QKeySequence SAVE_NOTE_SHORTCUT = QKeySequence("Ctrl+S");
+        const QKeySequence DOWNLOAD_NOTE_SHORTCUT = QKeySequence("Ctrl+D");
     }
 }
 

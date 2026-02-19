@@ -112,6 +112,8 @@ namespace sticky_note
             noteObj["id"] = note.id.toString();
             noteObj["x"] = note.pos.x();
             noteObj["y"] = note.pos.y();
+            noteObj["w"] = note.size.width();
+            noteObj["h"] = note.size.height();
             noteObj["color"] = note.color.name();
             noteObj["title"] = note.title;
             noteObj["text"] = note.text;
@@ -163,6 +165,10 @@ namespace sticky_note
             if (note.id.isNull()) note.id = QUuid::createUuid();
 
             note.pos = QPoint(obj["x"].toInt(), obj["y"].toInt());
+            note.size = QSize(obj["w"].toInt(), obj["h"].toInt());
+            if (note.size.width() == 0 || note.size.height() == 0)
+                note.size = QSize(note_window::WIDTH, note_window::HEIGHT);
+
             note.color = QColor(obj["color"].toString());
             note.title = obj["title"].toString();
             note.text = obj["text"].toString();
@@ -181,6 +187,10 @@ namespace sticky_note
                 if (note.id.isNull()) note.id = QUuid::createUuid();
 
                 note.pos = QPoint(obj["x"].toInt(), obj["y"].toInt());
+                note.size = QSize(obj["w"].toInt(), obj["h"].toInt());
+                if (note.size.width() == 0 || note.size.height() == 0)
+                    note.size = QSize(note_window::WIDTH, note_window::HEIGHT);
+
                 note.color = QColor(obj["color"].toString());
                 note.title = obj["title"].toString();
                 note.text = obj["text"].toString();
