@@ -602,9 +602,9 @@ void sticky_note::NoteWindow::mousePressEvent(QMouseEvent* event)
                 selectCursor.movePosition(QTextCursor::Right, QTextCursor::KeepAnchor);
                 QString selectedText = selectCursor.selectedText();
 
-                if (selectedText == "☐" || selectedText == "☑")
+                if (selectedText == "☐" || selectedText == "☑" || selectedText == "☒")
                 {
-                    const QString newText = selectCursor.selectedText() == "☐" ? "☑" : "☐";
+                    const QString newText = selectedText == "☐" ? "☑" : "☐";
                     selectCursor.insertText(newText);
 
                     // Update note_edit and save
@@ -725,10 +725,11 @@ QString sticky_note::NoteWindow::to_view_markdown(const QString& md)
     QString result = md;
 
     // Render Markdown-like checkboxes as symbols
-    result.replace(QRegularExpression("^(\\s*[-*+] )\\[ \\]", QRegularExpression::MultilineOption), "\\1☐");
-    result.replace(QRegularExpression("^(\\s*[-*+] )\\[x\\]",
-                                      QRegularExpression::CaseInsensitiveOption | QRegularExpression::MultilineOption),
-                   "\\1☑");
+    // Support "- [ ]", "* [ ]", "+ [ ]" and also "[ ]", "[]" at start of line
+    result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)\\[ \\]", QRegularExpression::MultilineOption), "\\1☐");
+    result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)\\[\\]", QRegularExpression::MultilineOption), "\\1☐");
+    result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)\\[x\\]", QRegularExpression::MultilineOption), "\\1☑");
+    result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)\\[X\\]", QRegularExpression::MultilineOption), "\\1☒");
 
     // Preserve single newlines as visible line breaks in Markdown by converting to soft-breaks
     // Markdown collapses single newlines inside a paragraph; adding two spaces before a newline forces a break
@@ -742,8 +743,11 @@ QString sticky_note::NoteWindow::from_view_markdown(const QString& md)
     QString result = md;
 
     // Convert rendered checkbox symbols back to Markdown-like syntax
-    result.replace(QRegularExpression("^(\\s*[-*+] )☐", QRegularExpression::MultilineOption), "\\1[ ]");
-    result.replace(QRegularExpression("^(\\s*[-*+] )☑", QRegularExpression::MultilineOption), "\\1[x]");
+    // If it was a symbol with a bullet, it stays with a bullet.
+    // If it was just "☐" (originally from "[]" or "[ ]"), it becomes "[ ]".
+    result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)☐", QRegularExpression::MultilineOption), "\\1[ ]");
+    result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)☑", QRegularExpression::MultilineOption), "\\1[x]");
+    result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)☒", QRegularExpression::MultilineOption), "\\1[X]");
 
     // Revert soft-breaks (two spaces before newline) back to plain newlines for storage/editing
     result.replace("  \n", "\n");

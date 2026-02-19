@@ -8,6 +8,8 @@ A lightweight, feature-rich sticky note application for Linux (Ubuntu) built wit
 
 - **Create & Edit Notes:** Easily create new notes and edit their content with a clean interface.
 - **Markdown Support:** Format your notes using simple Markdown syntax.
+- **Interactive Checkboxes:** Use Markdown-style checkboxes like `- [ ]`, `- [x]`, `[]`, `[ ]`, or `[X]`. They render as
+  ☐/☑/☒, you can click to toggle, and they round‑trip correctly on save/import/export.
 - **Customizable Colors:** Choose from a set of predefined pastel colors or select any custom color for each note.
 - **Pin to Top:** Pin important notes to keep them above all other windows.
 - **Persistence:** Your notes are automatically saved and restored when you restart the application.
@@ -87,6 +89,13 @@ To bundle the application for Windows:
     - `Ctrl + C`: Change note color.
     - `Ctrl + P`: Toggle pin (Stay on Top).
     - `Ctrl + W`: Close the current note.
+
+## What's New (0.1.3)
+
+- Expanded checkbox parsing: supports bare `[ ]`/`[]`, uppercase `[X]` (renders as ☒), and checkboxes with or without
+  list bullets.
+- Click-to-toggle now recognizes ☒ symbols in addition to ☐/☑.
+- Round-trip safety: rendered symbols convert back to correct Markdown syntax on save/export/import.
 
 ## License
 
