@@ -58,9 +58,18 @@ target_include_directories(sticky_note PRIVATE
 )
 
 # AppImage generation target
-add_custom_target(appimage
-        COMMAND bash "${CMAKE_SOURCE_DIR}/packaging/build_appimage.sh"
-        DEPENDS sticky_note
-        WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
-        COMMENT "Generating AppImage..."
-)
+if (LINUX)
+    add_custom_target(appimage
+            COMMAND bash "${CMAKE_SOURCE_DIR}/packaging/build_appimage.sh"
+            DEPENDS sticky_note
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+            COMMENT "Generating AppImage..."
+    )
+elseif (WIN32)
+    add_custom_target(windows_zip
+            COMMAND cmd.exe /C "${CMAKE_SOURCE_DIR}/packaging/build_windows_zip.bat"
+            DEPENDS sticky_note
+            WORKING_DIRECTORY "${CMAKE_SOURCE_DIR}"
+            COMMENT "Generating Windows ZIP export..."
+    )
+endif ()

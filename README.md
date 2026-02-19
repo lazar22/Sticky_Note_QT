@@ -43,13 +43,24 @@ A lightweight, feature-rich sticky note application for Linux (Ubuntu) built wit
    ./build/sticky_note
    ```
 
-### AppImage
+### AppImage (Linux)
 
-You can also generate an AppImage for portability:
+You can generate an AppImage for portability on Linux:
 
 ```bash
 cmake --build build --target appimage
 ```
+
+### Windows Export
+
+To bundle the application for Windows:
+
+1. **Build the project** in Release mode using a Windows compiler (e.g., MSVC or MinGW).
+2. **Run the export target:**
+   ```bash
+   cmake --build build --target windows_zip
+   ```
+   *Note: This runs `packaging/build_windows_zip.bat` which uses `windeployqt` to bundle dependencies.*
 
 ## Usage
 
