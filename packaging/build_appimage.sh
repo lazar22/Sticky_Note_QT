@@ -47,20 +47,23 @@ cp "$BUILD_DIR/$APP" "$APPDIR/usr/bin/"
 cp "$ROOT_DIR/sticky_note.desktop" "$APPDIR/usr/share/applications/"
 cp "$ROOT_DIR/icons/note_icon.png" "$APPDIR/usr/share/icons/hicolor/256x256/apps/sticky_note.png"
 
-# 4) Bundle Qt dependencies into the AppDir
+# Bundle Qt dependencies into the AppDir
 # linuxdeploy uses plugins; the Qt plugin bundles Qt libs/plugins/resources (Qt6 supported).
 export QML_SOURCES_PATHS=""   # set this if you use QML; can leave empty for Widgets-only
 export LINUXDEPLOY_PLUGINS="qt"
 export LINUXDEPLOY_PLUGIN_QT_PATH="$PLUGIN_QT"
+# Force linuxdeploy-plugin-qt to bundle everything it finds
+export EXTRA_QT_PLUGINS="platforms,xcbglintegrations,platformthemes"
 
 # Make sure tools can run (some environments need this for AppImages)
 export APPIMAGE_EXTRACT_AND_RUN=1
 
 "$LINUXDEPLOY" \
   --appdir "$APPDIR" \
-  -e "$APPDIR/usr/bin/$APP" \
-  -d "$APPDIR/usr/share/applications/sticky_note.desktop" \
-  -i "$APPDIR/usr/share/icons/hicolor/256x256/apps/sticky_note.png"
+  -e "$BUILD_DIR/$APP" \
+  -d "$ROOT_DIR/sticky_note.desktop" \
+  -i "$ROOT_DIR/icons/note_icon.png" \
+  --plugin qt
 
 # 5) AppRun entry point (required by AppImage spec)
 # Many tools generate it, but ensure it exists.
