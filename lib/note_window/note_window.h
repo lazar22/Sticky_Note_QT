@@ -180,6 +180,29 @@ namespace sticky_note
          */
         void update_height();
 
+        /**
+         * @brief Function to transfer edited md text to regular Label text
+         *
+         * @param md format of the text you want to adapt
+         */
+        static QString to_view_markdown(const QString& md);
+
+        /**
+         * @brief Function to transfer from the regular Label text to edited md text
+         *
+         * @param md regular text to adapt to md text
+         */
+        static QString from_view_markdown(const QString& md);
+
+    private:
+        /**
+         * @brief Function to apply syntax highlighting to code blocks
+         *
+         * @param code the code to highlight
+         * @param lang the language for highlighting
+         */
+        static QString highlight_code(const QString& code, const QString& lang);
+
     private:
         /**
          * @brief Function to update font size depending on the size of the window
@@ -197,20 +220,6 @@ namespace sticky_note
          * @param pos of the mouse cursor
          */
         Qt::Edges get_resize_edges(const QPoint& pos) const;
-
-        /**
-         * @brief Function to transfer edited md text to regular Label text
-         *
-         * @param md format of the text you want to adapt
-         */
-        static QString to_view_markdown(const QString& md);
-
-        /**
-         * @brief Function to transfer from the regular Label text to edited md text
-         *
-         * @param md regular text to adapt to md text
-         */
-        static QString from_view_markdown(const QString& md);
     };
 }
 

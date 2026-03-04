@@ -364,7 +364,7 @@ void sticky_note::NoteWindow::close()
 void sticky_note::NoteWindow::edit(const std::string _note)
 {
     note_text = QString::fromStdString(_note);
-    note_label->setMarkdown(to_view_markdown(note_text));
+    note_label->setHtml(to_view_markdown(note_text));
     note_edit->setPlainText(note_text);
 }
 
@@ -373,7 +373,10 @@ void sticky_note::NoteWindow::save()
     note_text = note_edit->toPlainText();
 
     title_label->setText(title_edit->text());
-    note_label->setMarkdown(to_view_markdown(note_text));
+    // Use setHtml if there are custom code blocks, or trust setMarkdown
+    // Actually, QTextBrowser::setMarkdown is generally preferred for consistency,
+    // but here we are producing mixed MD/HTML.
+    note_label->setHtml(to_view_markdown(note_text));
 
     title_edit->hide();
     title_label->show();
@@ -725,6 +728,47 @@ QString sticky_note::NoteWindow::to_view_markdown(const QString& md)
 {
     QString result = md;
 
+    // Discord-like code blocks for C, C++, Java, and Python
+    // Supported languages: C, C++, Java, Python
+    // Using a simple regex to match ```lang\ncode\n```
+    // Note: Use MultilineOption and dot matches newline to handle multi-line code blocks
+    QRegularExpression codeRegex("```(?:C\\+\\+|C|Java|Python)\\n(.*?)\\n```",
+                                 QRegularExpression::DotMatchesEverythingOption);
+
+    // Find code blocks and store them, replacing with placeholders to protect them from further transformations
+    QList<QString> codeBlocks;
+    QRegularExpressionMatchIterator it = codeRegex.globalMatch(result);
+    QList<QRegularExpressionMatch> matches;
+    while (it.hasNext())
+    {
+        matches.append(it.next());
+    }
+
+    for (int i = matches.size() - 1; i >= 0; --i)
+    {
+        QRegularExpressionMatch match = matches.at(i);
+        QString firstLine = match.captured(0).section('\n', 0, 0);
+        QString lang = firstLine.mid(3).trimmed();
+        QString code = match.captured(1);
+
+        // Escape HTML in the code block
+        code.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+
+        QString highlighted = highlight_code(code, lang);
+
+        QString styledCode = QString(
+            "<div style=\"background-color: #2b2d31; color: #dbdee1; border-radius: 6px; padding: 10px; margin: 6px 0; border: 1px solid #3f4147; font-family: 'Courier New', monospace;\">"
+            "<div style=\"font-size: 1pt; color: #2b2d31; line-height: 0; height: 0; overflow: hidden;\">%1</div>"
+            "<pre style=\"margin: 0; white-space: pre-wrap;\">%2</pre>"
+            "</div>"
+        ).arg(lang, highlighted);
+
+        // Replace with placeholder
+        QString placeholder = QString("@@@CODE_BLOCK_%1@@@").arg(i);
+        codeBlocks.insert(0, styledCode); // Store in original order
+        result.replace(match.capturedStart(), match.capturedLength(), placeholder);
+    }
+
     // Escape Markdown headers to prevent them from being rendered as large, potentially invisible headers
     // Support "#", "##", "###", "####", "#####", "######" at start of line
     result.replace(QRegularExpression("^(\\s*)(#+)", QRegularExpression::MultilineOption), "\\1\u200B\\2");
@@ -736,7 +780,17 @@ QString sticky_note::NoteWindow::to_view_markdown(const QString& md)
     result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)\\[x\\]", QRegularExpression::MultilineOption), "\\1☑");
     result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)\\[X\\]", QRegularExpression::MultilineOption), "\\1☒");
 
+    // Add soft-breaks (two spaces before newline) for the rest of the text
     result.replace(QRegularExpression("(?<!  )\n"), "  \n");
+
+    // Put code blocks back
+    for (int i = 0; i < codeBlocks.size(); ++i)
+    {
+        QString placeholder = QString("@@@CODE_BLOCK_%1@@@").arg(i);
+        // If there was a soft break added to the placeholder, remove it to keep it flush
+        result.replace(placeholder + "  \n", codeBlocks[i] + "\n");
+        result.replace(placeholder, codeBlocks[i]);
+    }
 
     return result;
 }
@@ -744,6 +798,37 @@ QString sticky_note::NoteWindow::to_view_markdown(const QString& md)
 QString sticky_note::NoteWindow::from_view_markdown(const QString& md)
 {
     QString result = md;
+
+    // Revert Discord-like code blocks
+    QRegularExpression styledCodeRegex(
+        "<div style=\"background-color: #2b2d31; color: #dbdee1; border-radius: 6px; padding: 10px; margin: 6px 0; border: 1px solid #3f4147; font-family: 'Courier New', monospace;\">"
+        "<div style=\"font-size: 1pt; color: #2b2d31; line-height: 0; height: 0; overflow: hidden;\">(.*?)</div>"
+        "<pre style=\"margin: 0; white-space: pre-wrap;\">(.*?)</pre>"
+        "</div>", QRegularExpression::DotMatchesEverythingOption);
+
+    QRegularExpressionMatchIterator it = styledCodeRegex.globalMatch(result);
+    QList<QRegularExpressionMatch> matches;
+    while (it.hasNext())
+    {
+        matches.append(it.next());
+    }
+
+    for (int i = matches.size() - 1; i >= 0; --i)
+    {
+        QRegularExpressionMatch match = matches.at(i);
+        QString lang = match.captured(1);
+        QString code = match.captured(2);
+
+        // Strip HTML span tags used for highlighting
+        code.replace(QRegularExpression("<span style=\"color: #[0-9a-fA-F]{6};\">"), "");
+        code.replace("</span>", "");
+
+        // Unescape HTML in the code block
+        code.replace("&lt;", "<").replace("&gt;", ">").replace("&amp;", "&");
+
+        QString originalCode = QString("```%1\n%2\n```").arg(lang, code);
+        result.replace(match.capturedStart(), match.capturedLength(), originalCode);
+    }
 
     // Remove escaping for '#' at the beginning of the line
     result.replace(QRegularExpression("^(\\s*)\u200B(#+)", QRegularExpression::MultilineOption), "\\1\\2");
@@ -759,4 +844,129 @@ QString sticky_note::NoteWindow::from_view_markdown(const QString& md)
     result.replace("  \n", "\n");
 
     return result;
+}
+
+QString sticky_note::NoteWindow::highlight_code(const QString& code, const QString& lang)
+{
+    QString highlighted = code;
+
+    struct Rule
+    {
+        QRegularExpression pattern;
+        QString color;
+    };
+
+    QList<Rule> rules;
+
+    if (lang == "C++" || lang == "C" || lang == "Java")
+    {
+        // Comments
+        rules.append({QRegularExpression("//.*"), "#6a9955"});
+        rules.append({QRegularExpression("/\\*.*?\\*/", QRegularExpression::DotMatchesEverythingOption), "#6a9955"});
+
+        // Strings
+        rules.append({QRegularExpression("\".*?\""), "#ce9178"});
+
+        // Preprocessor
+        rules.append({QRegularExpression("^\\s*#\\w+"), "#c586c0"});
+
+        // std:: types and members
+        rules.append({QRegularExpression("std::\\w+"), "#4ec9b0"});
+
+        // Keywords
+        QStringList keywords = {
+            "alignas", "alignof", "and", "and_eq", "asm", "atomic_cancel", "atomic_commit", "atomic_noexcept", "auto",
+            "bitand", "bitor", "bool", "break", "case", "catch", "char", "char8_t", "char16_t", "char32_t", "class",
+            "compl", "concept", "const", "consteval", "constexpr", "constinit", "const_cast", "continue", "co_await",
+            "co_return", "co_yield", "decltype", "default", "delete", "do", "double", "dynamic_cast", "else", "enum",
+            "explicit", "export", "extern", "false", "float", "for", "friend", "goto", "if", "inline", "int", "long",
+            "mutable", "namespace", "new", "noexcept", "not", "not_eq", "nullptr", "operator", "or", "or_eq", "private",
+            "protected", "public", "reflexpr", "register", "reinterpret_cast", "requires", "return", "short", "signed",
+            "sizeof", "static", "static_assert", "static_cast", "struct", "switch", "synchronized", "template", "this",
+            "thread_local", "throw", "true", "try", "typedef", "typeid", "typename", "union", "unsigned", "using",
+            "virtual", "void", "volatile", "wchar_t", "while", "xor", "xor_eq", "final", "override", "import", "module",
+            // Java specific
+            "abstract", "assert", "boolean", "byte", "extends", "finally", "implements", "instanceof", "interface",
+            "native", "package", "strictfp", "super", "throws", "transient"
+        };
+        rules.append({QRegularExpression("\\b(" + keywords.join("|") + ")\\b"), "#569cd6"});
+
+        // Numeric literals
+        rules.append({QRegularExpression("\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?[fFdD]?\\b"), "#b5cea8"});
+    }
+    else if (lang == "Python")
+    {
+        // Comments
+        rules.append({QRegularExpression("#.*"), "#6a9955"});
+
+        // Strings
+        rules.append({QRegularExpression("(['\"])(?:\\\\.|[^\\\\])*?\\1"), "#ce9178"});
+        rules.append({
+            QRegularExpression("('''|\"\"\")(.*?)\\1", QRegularExpression::DotMatchesEverythingOption), "#ce9178"
+        });
+
+        // Keywords
+        QStringList keywords = {
+            "False", "None", "True", "and", "as", "assert", "async", "await", "break", "class", "continue", "def",
+            "del",
+            "elif", "else", "except", "finally", "for", "from", "global", "if", "import", "in", "is", "lambda",
+            "nonlocal", "not", "or", "pass", "raise", "return", "try", "while", "with", "yield"
+        };
+        rules.append({QRegularExpression("\\b(" + keywords.join("|") + ")\\b"), "#569cd6"});
+
+        // Numeric literals
+        rules.append({QRegularExpression("\\b\\d+(\\.\\d+)?([eE][+-]?\\d+)?[jJ]?\\b"), "#b5cea8"});
+
+        // Decorators
+        rules.append({QRegularExpression("@\\w+"), "#dcdcaa"});
+    }
+
+    // Apply rules
+    struct MatchEntry
+    {
+        int start;
+        int length;
+        QString color;
+    };
+    QList<MatchEntry> matchEntries;
+
+    for (const auto& rule : rules)
+    {
+        QRegularExpressionMatchIterator it = rule.pattern.globalMatch(highlighted);
+        while (it.hasNext())
+        {
+            QRegularExpressionMatch m = it.next();
+            // Basic conflict resolution: only add if not overlapping with existing matches
+            bool overlap = false;
+            for (const auto& existing : matchEntries)
+            {
+                if ((m.capturedStart() >= existing.start && m.capturedStart() < existing.start + existing.length) ||
+                    (existing.start >= m.capturedStart() && existing.start < m.capturedStart() + m.capturedLength()))
+                {
+                    overlap = true;
+                    break;
+                }
+            }
+            if (!overlap)
+            {
+                matchEntries.append({
+                    static_cast<int>(m.capturedStart()), static_cast<int>(m.capturedLength()), rule.color
+                });
+            }
+        }
+    }
+
+    // Sort matches by start position in descending order to replace from the end
+    std::sort(matchEntries.begin(), matchEntries.end(), [](const MatchEntry& a, const MatchEntry& b)
+    {
+        return a.start > b.start;
+    });
+
+    for (const auto& m : matchEntries)
+    {
+        QString snippet = highlighted.mid(m.start, m.length);
+        highlighted.replace(m.start, m.length, QString("<span style=\"color: %1;\">%2</span>").arg(m.color, snippet));
+    }
+
+    return highlighted;
 }
