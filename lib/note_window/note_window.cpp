@@ -384,6 +384,7 @@ void sticky_note::NoteWindow::save()
     edit_btn->setIcon(sticky_note::note_icons::PEN_ICON());
 
     setWindowTitle(title_label->text());
+    update_height();
     SaveHandler::save_to_json({
         id, pos(), size(), current_color, title_label->text(), note_text, is_pinned
     });
@@ -724,6 +725,10 @@ QString sticky_note::NoteWindow::to_view_markdown(const QString& md)
 {
     QString result = md;
 
+    // Escape Markdown headers to prevent them from being rendered as large, potentially invisible headers
+    // Support "#", "##", "###", "####", "#####", "######" at start of line
+    result.replace(QRegularExpression("^(\\s*)(#+)", QRegularExpression::MultilineOption), "\\1\u200B\\2");
+
     // Render Markdown-like checkboxes as symbols
     // Support "- [ ]", "* [ ]", "+ [ ]" and also "[ ]", "[]" at start of line
     result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)\\[ \\]", QRegularExpression::MultilineOption), "\\1☐");
@@ -731,9 +736,7 @@ QString sticky_note::NoteWindow::to_view_markdown(const QString& md)
     result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)\\[x\\]", QRegularExpression::MultilineOption), "\\1☑");
     result.replace(QRegularExpression("^(\\s*(?:[-*+] )?)\\[X\\]", QRegularExpression::MultilineOption), "\\1☒");
 
-    // Preserve single newlines as visible line breaks in Markdown by converting to soft-breaks
-    // Markdown collapses single newlines inside a paragraph; adding two spaces before a newline forces a break
-    result.replace("\n", "  \n");
+    result.replace(QRegularExpression("(?<!  )\n"), "  \n");
 
     return result;
 }
@@ -741,6 +744,9 @@ QString sticky_note::NoteWindow::to_view_markdown(const QString& md)
 QString sticky_note::NoteWindow::from_view_markdown(const QString& md)
 {
     QString result = md;
+
+    // Remove escaping for '#' at the beginning of the line
+    result.replace(QRegularExpression("^(\\s*)\u200B(#+)", QRegularExpression::MultilineOption), "\\1\\2");
 
     // Convert rendered checkbox symbols back to Markdown-like syntax
     // If it was a symbol with a bullet, it stays with a bullet.

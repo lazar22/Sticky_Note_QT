@@ -3,6 +3,9 @@
 //
 
 #include "save_handler.h"
+#include <QStandardPaths>
+#include <QDir>
+#include <QFile>
 
 namespace sticky_note
 {
