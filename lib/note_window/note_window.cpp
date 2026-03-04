@@ -4,7 +4,8 @@
 
 #include "save_handler/save_handler.h"
 #include "note_action/note_action.h"
-#include "note_window.h"
+#include "note_window/note_window.h"
+#include "note_window/note_markdown_processor.h"
 #include "shared.h"
 
 #include <QGuiApplication>
@@ -21,7 +22,7 @@ static constexpr int WINDOW_MARGIN = 8;
 static constexpr int RESIZE_HANDLE_SIZE = 10;
 
 sticky_note::NoteWindow::NoteWindow(QWidget* parent)
-    : QWidget(parent), id(QUuid::createUuid()), current_color("#fff6a8")
+    : QWidget(parent), id(QUuid::createUuid()), current_color(note_styles::DEFAULT_NOTE_COLOR)
 {
     setObjectName("NoteWindow");
 
@@ -119,12 +120,7 @@ sticky_note::NoteWindow::NoteWindow(QWidget* parent)
         grid_layout->setSpacing(2);
         grid_layout->setContentsMargins(5, 5, 5, 5);
 
-        const QVector<QColor> colors = {
-            "#ffadad", "#ffd6a5", "#fdffb6", "#caffbf",
-            "#9bf6ff", "#a0c4ff", "#bdb2ff", "#ffc6ff",
-            "#fffffc", "#f0f0f0", "#d9d9d9", "#bfbfbf",
-            "#ff7eb9", "#7afcff", "#feff9c", "#ff9bbb"
-        };
+        const QVector<QColor> colors = note_styles::PICKABLE_COLORS;
 
         for (int i = 0; i < colors.size(); ++i)
         {
@@ -364,7 +360,7 @@ void sticky_note::NoteWindow::close()
 void sticky_note::NoteWindow::edit(const std::string _note)
 {
     note_text = QString::fromStdString(_note);
-    note_label->setHtml(to_view_markdown(note_text));
+    note_label->setHtml(NoteMarkdownProcessor::to_view_markdown(note_text));
     note_edit->setPlainText(note_text);
 }
 
@@ -376,7 +372,7 @@ void sticky_note::NoteWindow::save()
     // Use setHtml if there are custom code blocks, or trust setMarkdown
     // Actually, QTextBrowser::setMarkdown is generally preferred for consistency,
     // but here we are producing mixed MD/HTML.
-    note_label->setHtml(to_view_markdown(note_text));
+    note_label->setHtml(NoteMarkdownProcessor::to_view_markdown(note_text));
 
     title_edit->hide();
     title_label->show();
@@ -757,9 +753,9 @@ QString sticky_note::NoteWindow::to_view_markdown(const QString& md)
         QString highlighted = highlight_code(code, lang);
 
         QString styledCode = QString(
-            "<div style=\"background-color: #2b2d31; color: #dbdee1; border-radius: 6px; padding: 10px; margin: 6px 0; border: 1px solid #3f4147; font-family: 'Courier New', monospace;\">"
+            "<div style=\"background-color: #2b2d31; color: #dbdee1; border-radius: 6px; padding: 16px 20px; margin: 6px 0; border: 1px solid #3f4147; font-family: 'Courier New', monospace;\">"
             "<div style=\"font-size: 1pt; color: #2b2d31; line-height: 0; height: 0; overflow: hidden;\">%1</div>"
-            "<pre style=\"margin: 0; white-space: pre-wrap;\">%2</pre>"
+            "<pre style=\"margin: 0; padding: 0; white-space: pre-wrap;\">%2</pre>"
             "</div>"
         ).arg(lang, highlighted);
 
@@ -801,9 +797,9 @@ QString sticky_note::NoteWindow::from_view_markdown(const QString& md)
 
     // Revert Discord-like code blocks
     QRegularExpression styledCodeRegex(
-        "<div style=\"background-color: #2b2d31; color: #dbdee1; border-radius: 6px; padding: 10px; margin: 6px 0; border: 1px solid #3f4147; font-family: 'Courier New', monospace;\">"
+        "<div style=\"background-color: #2b2d31; color: #dbdee1; border-radius: 6px; padding: 16px 20px; margin: 6px 0; border: 1px solid #3f4147; font-family: 'Courier New', monospace;\">"
         "<div style=\"font-size: 1pt; color: #2b2d31; line-height: 0; height: 0; overflow: hidden;\">(.*?)</div>"
-        "<pre style=\"margin: 0; white-space: pre-wrap;\">(.*?)</pre>"
+        "<pre style=\"margin: 0; padding: 0; white-space: pre-wrap;\">(.*?)</pre>"
         "</div>", QRegularExpression::DotMatchesEverythingOption);
 
     QRegularExpressionMatchIterator it = styledCodeRegex.globalMatch(result);

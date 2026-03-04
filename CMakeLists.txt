@@ -30,6 +30,8 @@ add_executable(sticky_note
         lib/menage_window/menage_window.cpp
         lib/note_action/note_action.cpp
         lib/note_window/note_window.cpp
+        lib/note_window/note_syntax_highlighter.cpp
+        lib/note_window/note_markdown_processor.cpp
         lib/save_handler/save_handler.cpp
         lib/scaling_button/scaling_button.cpp
         sticky_note.desktop

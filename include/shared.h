@@ -64,6 +64,33 @@ namespace sticky_note
         const QKeySequence SAVE_NOTE_SHORTCUT = QKeySequence("Ctrl+S");
         const QKeySequence DOWNLOAD_NOTE_SHORTCUT = QKeySequence("Ctrl+D");
     }
+
+    namespace note_styles
+    {
+        // Code Block Styling
+        constexpr const char* CODE_BLOCK_BG = "#2b2d31";
+        constexpr const char* CODE_BLOCK_TEXT = "#dbdee1";
+        constexpr const char* CODE_BLOCK_BORDER = "#3f4147";
+        constexpr const char* CODE_BLOCK_FONT_FAMILY = "'Courier New', monospace";
+
+        // Syntax Highlighting Colors
+        constexpr const char* COLOR_COMMENT = "#6a9955";
+        constexpr const char* COLOR_STRING = "#ce9178";
+        constexpr const char* COLOR_PREPROCESSOR = "#c586c0";
+        constexpr const char* COLOR_STD_NAMESPACE = "#4ec9b0";
+        constexpr const char* COLOR_KEYWORD = "#569cd6";
+        constexpr const char* COLOR_NUMBER = "#b5cea8";
+        constexpr const char* COLOR_PYTHON_DECORATOR = "#dcdcaa";
+
+        // Note UI Colors
+        constexpr const char* DEFAULT_NOTE_COLOR = "#fff6a8";
+        const QVector<QColor> PICKABLE_COLORS = {
+            "#ffadad", "#ffd6a5", "#fdffb6", "#caffbf",
+            "#9bf6ff", "#a0c4ff", "#bdb2ff", "#ffc6ff",
+            "#fffffc", "#f0f0f0", "#d9d9d9", "#bfbfbf",
+            "#ff7eb9", "#7afcff", "#feff9c", "#ff9bbb"
+        };
+    }
 }
 
 #endif //SHARED_H
