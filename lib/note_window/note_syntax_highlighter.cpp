@@ -19,7 +19,7 @@ QString sticky_note::NoteSyntaxHighlighter::highlight_code(const QString& code, 
 
     if (lang == "C++" || lang == "C" || lang == "Java")
     {
-        // Comments
+        // Comments`
         rules.append({QRegularExpression("//.*"), note_styles::COLOR_COMMENT});
         rules.append({
             QRegularExpression("/\\*.*?\\*/", QRegularExpression::DotMatchesEverythingOption),
